@@ -1,0 +1,24 @@
+{
+  "name": "etl-rve",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "async": "^3.2.0",
+    "convict": "^6.0.0",
+    "debug": "^4.3.1",
+    "jsdom": "^16.4.0",
+    "mongoose": "^5.11.13",
+    "node-cron": "^2.0.3",
+    "puppeteer": "^5.5.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./main.js",
+    "data": "DEBUG=app* node ./module/hashtag",
+    "deploy": "git push heroku"
+  },
+  "author": "",
+  "license": "ISC"
+}
