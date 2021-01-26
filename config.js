@@ -16,6 +16,14 @@ const config = convict({
       env: 'DB_URL',
     },
   },
+  api: {
+    url: {
+      doc: 'API URL',
+      format: String,
+      default: 'http://127.0.0.1:3030',
+      env: 'API_URL',
+    },
+  },
 });
 
 // Perform validation

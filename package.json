@@ -5,10 +5,13 @@
   "main": "main.js",
   "dependencies": {
     "async": "^3.2.0",
+    "body-parser": "^1.19.0",
     "convict": "^6.0.0",
     "debug": "^4.3.1",
+    "express": "^4.17.1",
     "jsdom": "^16.4.0",
     "mongoose": "^5.11.13",
+    "morgan": "^1.10.0",
     "node-cron": "^2.0.3",
     "puppeteer": "^5.5.0"
   },
@@ -16,7 +19,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./main.js",
-    "data": "DEBUG=app* node ./module/hashtag",
+    "hashtag": "DEBUG=app* node ./module/hashtag",
+    "post": "DEBUG=app* node ./module/post",
     "deploy": "git push heroku"
   },
   "author": "",

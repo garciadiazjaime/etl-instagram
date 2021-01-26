@@ -13,22 +13,16 @@ const UserSchema = new mongoose.Schema({
   timestamps: true
 })
 
-const AddressSchema = new mongoose.Schema({
-  street: { type:String },
-  zipCode: { type: String },
-  city: { type: String },
-  country: { type: String },
-})
-
 const LocationSchema = new mongoose.Schema({
   id: { type:String },
   name: { type: String },
   slug: { type: String },
+  hasPublicPage: { type: String },
   gps: {
     type: { type: String },
     coordinates: { type: [], default: undefined }
   },
-  address: AddressSchema,
+  address: { type: String },
 }, {
   timestamps: true
 })
@@ -40,6 +34,7 @@ const PostSchema = new Schema({
   likeCount: Number,
   commentsCount: Number,
   permalink: String,
+  shortcode: String,
   caption: String,
   mediaUrl: String,
   mediaType: String,

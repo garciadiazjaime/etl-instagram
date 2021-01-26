@@ -15,9 +15,7 @@ async function extract(cookies, hashtag) {
     return fs.readFileSync('./stubs/instagram-hashtag.html', 'utf8');
   }
 
-  const source = 'instagram-hashtag';
-
-  return getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, source, cookies);
+  return getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, cookies);
 }
 
 function getRecentPosts(recentPosts, hashtag) {
@@ -30,6 +28,7 @@ function getRecentPosts(recentPosts, hashtag) {
     likeCount: post.edge_media_preview_like.count,
     commentsCount: post.edge_media_to_comment.count,
     permalink: `https://www.instagram.com/p/${post.shortcode}/`,
+    shortcode: post.shortcode,
     caption: post.edge_media_to_caption.edges[0].node.text,
     mediaUrl: post.thumbnail_src,
     accessibility: post.accessibility_caption,
