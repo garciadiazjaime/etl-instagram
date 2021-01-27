@@ -63,6 +63,25 @@ async function transform(html, shortcode) {
   });
 }
 
+async function getLocation(cookies, data) {
+  const location = await Location.findOne({ id: data.id });
+
+  if (location) {
+    return location
+  }
+
+  const locationExtra = await locationETL(cookies, data);
+
+  const newLocation = {
+    ...data,
+    locationExtra
+  }
+
+  await Location(newLocation).save()
+
+  return newLocation
+}
+
 async function main(cookies) {
   await openDB();
 
@@ -79,18 +98,7 @@ async function main(cookies) {
     const data = await transform(html, shortcode);
 
     if (data.location) {
-      const location = await Location.findOne({ id: data.location.id });
-
-      const locationExtra = location || await locationETL(cookies, data.location);
-
-      data.location = {
-        ...data.location,
-        ...locationExtra,
-      };
-
-      await Location.findOneAndUpdate({ id: data.location.id }, data.location, {
-        upsert: true,
-      });
+      data.location = await getLocation(cookies, data.location)
     }
 
     await User.findOneAndUpdate({ id: data.user.id }, data.user, {
