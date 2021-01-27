@@ -1,7 +1,7 @@
 const fs = require('fs');
 const jsdom = require('jsdom');
 const mapSeries = require('async/mapSeries');
-const debug = require('debug')('app:posts');
+const debug = require('debug')('app:hastag');
 
 const { Post } = require('../models/instagram')
 const { openDB } = require('../support/database')

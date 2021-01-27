@@ -1,7 +1,9 @@
 const fs = require('fs');
 const mapSeries = require('async/mapSeries');
 const jsdom = require('jsdom');
+const debug = require('debug')('app:post');
 
+const locationETL = require('./location')
 const { Post } = require('../models/instagram')
 const { openDB } = require('../support/database')
 const { waiter, getHTML } = require('../support/fetch');
@@ -64,18 +66,30 @@ async function transform(html, shortcode) {
 async function main(cookies) {
   await openDB()
 
-  const posts = await Post.find({user: { $exists: 0}}).limit(40)
+  const limit = 40
+  const posts = await Post.find({user: { $exists: 0}}).limit(limit)
+
+  debug(`processing ${posts.length}`)
 
   await mapSeries(posts.slice(0, 1), async (post) => {
-    console.log(post)
-
     const html = await extract(cookies, post.permalink)
 
     const shortcode = !isProduction ? stubShortcode : post.shortcode 
 
     const data = await transform(html, shortcode)
 
-    console.log(data)
+    if (data.location) {
+      const locationExtra = await locationETL(cookies, data.location)
+
+      data.location = {
+        ...data.location,
+        ...locationExtra
+      }
+    }
+
+    await Post.findOneAndUpdate({ id: data.id }, data, {
+      upsert: true,
+    })
 
     await waiter()
   })
