@@ -8,6 +8,11 @@ const config = convict({
     default: 'development',
     env: 'NODE_ENV',
   },
+  port: {
+    doc: 'The applicaton port environment.',
+    default: '3030',
+    env: 'PORT',
+  },
   db: {
     url: {
       doc: 'Database host name/IP',

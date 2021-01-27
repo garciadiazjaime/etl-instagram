@@ -10,7 +10,7 @@ const postETL = require('./module/post')
 const config = require('./config');
 
 const API_URL = config.get('api.url')
-const PORT = process.env.PORT || 3030
+const PORT = config.get('port')
 
 let app = express();
 app.use(bodyParser.urlencoded({ extended: false }));

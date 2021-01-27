@@ -96,9 +96,7 @@ async function main(cookies) {
 }
 
 if (require.main === module) {
-  main().then(() => {
-    process.exit(0);
-  });
+  main().then(() => process.exit(0)); // eslint-disable-line
 }
 
 module.exports = main;

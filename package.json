@@ -16,13 +16,16 @@
     "node-fetch": "^2.6.1",
     "puppeteer": "^5.5.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^7.18.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./main.js",
     "hashtag": "DEBUG=app* node ./module/hashtag",
     "post": "DEBUG=app* node ./module/post",
-    "deploy": "git push heroku"
+    "deploy": "git push heroku",
+    "lint": "npx eslint ."
   },
   "author": "",
   "license": "ISC"

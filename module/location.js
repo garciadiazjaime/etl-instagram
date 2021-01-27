@@ -1,16 +1,12 @@
 const fs = require('fs');
-const mapSeries = require('async/mapSeries');
 const jsdom = require('jsdom');
 
-const { Post } = require('../models/instagram')
-const { openDB } = require('../support/database')
-const { waiter, getHTML } = require('../support/fetch');
+const { getHTML } = require('../support/fetch');
 const config = require('../config');
 
 const { JSDOM } = jsdom;
 
 const isProduction = config.get('env') === 'production'
-const stubShortcode = 'CKfDyQDgl6W'
 
 async function extract(cookies, permalink) {
   if (!isProduction) {
@@ -37,7 +33,7 @@ function getLocation(data) {
   return response
 }
 
-async function transform(html, shortcode) {
+async function transform(html) {
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
