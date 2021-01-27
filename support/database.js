@@ -7,10 +7,10 @@ function openDB() {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
-    useCreateIndex: true
+    useCreateIndex: true,
   });
 }
 
 module.exports = {
-  openDB
-}
+  openDB,
+};

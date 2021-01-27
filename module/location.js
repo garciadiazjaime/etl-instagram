@@ -6,7 +6,7 @@ const config = require('../config');
 
 const { JSDOM } = jsdom;
 
-const isProduction = config.get('env') === 'production'
+const isProduction = config.get('env') === 'production';
 
 async function extract(cookies, permalink) {
   if (!isProduction) {
@@ -21,16 +21,16 @@ function getLocation(data) {
     phone: data.phone,
     aliasOnFB: data.primary_alias_on_fb,
     website: data.website,
-  }
+  };
 
   if (data.lat && data.lng) {
     response.gps = {
       type: 'Point',
-      coordinates: [data.lng, data.lat]
-    }
+      coordinates: [data.lng, data.lat],
+    };
   }
 
-  return response
+  return response;
 }
 
 async function transform(html) {
@@ -38,8 +38,7 @@ async function transform(html) {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      
-      const response = getLocation(dom.window._sharedData.entry_data.LocationsPage[0].graphql.location)
+      const response = getLocation(dom.window._sharedData.entry_data.LocationsPage[0].graphql.location); // eslint-disable-line
 
       resolve(response);
     };
@@ -47,13 +46,13 @@ async function transform(html) {
 }
 
 async function main(cookies, location) {
-  const locationURL = `https://www.instagram.com/explore/locations/${location.id}/${location.slug}/`
+  const locationURL = `https://www.instagram.com/explore/locations/${location.id}/${location.slug}/`;
 
-  const html = await extract(cookies, locationURL)
+  const html = await extract(cookies, locationURL);
 
-  const data = await transform(html)
+  const data = await transform(html);
 
-  return data
+  return data;
 }
 
 module.exports = main;

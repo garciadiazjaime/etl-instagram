@@ -1,4 +1,4 @@
-const fs = require("fs")
+const fs = require('fs');
 const puppeteer = require('puppeteer');
 
 const debug = require('debug')('app:fetch');
@@ -16,7 +16,7 @@ async function waiter() {
 }
 
 async function getBrowser() {
-  const executablePath = '/usr/bin/chromium-browser'
+  const executablePath = '/usr/bin/chromium-browser';
   const opts = fs.existsSync(executablePath) ? {
     headless: true,
     executablePath: '/usr/bin/chromium-browser',
@@ -58,6 +58,5 @@ async function getHTML(url, cookies) {
 
 module.exports = {
   waiter,
-  getHTML
+  getHTML,
 };
-

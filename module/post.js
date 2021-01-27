@@ -3,16 +3,16 @@ const mapSeries = require('async/mapSeries');
 const jsdom = require('jsdom');
 const debug = require('debug')('app:post');
 
-const locationETL = require('./location')
-const { Post } = require('../models/instagram')
-const { openDB } = require('../support/database')
+const locationETL = require('./location');
+const { Post, Location, User } = require('../models/instagram');
+const { openDB } = require('../support/database');
 const { waiter, getHTML } = require('../support/fetch');
 const config = require('../config');
 
 const { JSDOM } = jsdom;
 
-const isProduction = config.get('env') === 'production'
-const stubShortcode = 'CKfDyQDgl6W'
+const isProduction = config.get('env') === 'production';
+const stubShortcode = 'CKfDyQDgl6W';
 
 async function extract(cookies, permalink) {
   if (!isProduction) {
@@ -34,8 +34,8 @@ function getPostUpdated(data) {
       profilePicture: data.owner.profile_pic_url,
       followedBy: data.owner.edge_followed_by.count,
       postsCount: data.owner.edge_owner_to_timeline_media.count,
-    }
-  }
+    },
+  };
 
   if (data.location) {
     response.location = {
@@ -44,10 +44,10 @@ function getPostUpdated(data) {
       slug: data.location.slug,
       hasPublicPage: data.location.has_public_page,
       address: data.location.address_json,
-    }
+    };
   }
 
-  return response
+  return response;
 }
 
 async function transform(html, shortcode) {
@@ -55,8 +55,8 @@ async function transform(html, shortcode) {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      
-      const response = getPostUpdated(dom.window.__additionalData[`/p/${shortcode}/`].data.graphql.shortcode_media)
+      const { graphql } = dom.window.__additionalData[`/p/${shortcode}/`].data; // eslint-disable-line
+      const response = getPostUpdated(graphql.shortcode_media);
 
       resolve(response);
     };
@@ -64,35 +64,45 @@ async function transform(html, shortcode) {
 }
 
 async function main(cookies) {
-  await openDB()
+  await openDB();
 
-  const limit = 40
-  const posts = await Post.find({user: { $exists: 0}}).limit(limit)
+  const limit = 40;
+  const posts = await Post.find({ user: { $exists: 0 } }).limit(limit);
 
-  debug(`processing ${posts.length}`)
+  debug(`processing ${posts.length}`);
 
   await mapSeries(posts.slice(0, 1), async (post) => {
-    const html = await extract(cookies, post.permalink)
+    const html = await extract(cookies, post.permalink);
 
-    const shortcode = !isProduction ? stubShortcode : post.shortcode 
+    const shortcode = !isProduction ? stubShortcode : post.shortcode;
 
-    const data = await transform(html, shortcode)
+    const data = await transform(html, shortcode);
 
     if (data.location) {
-      const locationExtra = await locationETL(cookies, data.location)
+      const location = await Location.findOne({ id: data.location.id });
+
+      const locationExtra = location || await locationETL(cookies, data.location);
 
       data.location = {
         ...data.location,
-        ...locationExtra
-      }
+        ...locationExtra,
+      };
+
+      await Location.findOneAndUpdate({ id: data.location.id }, data.location, {
+        upsert: true,
+      });
     }
+
+    await User.findOneAndUpdate({ id: data.user.id }, data.user, {
+      upsert: true,
+    });
 
     await Post.findOneAndUpdate({ id: data.id }, data, {
       upsert: true,
-    })
+    });
 
-    await waiter()
-  })
+    await waiter();
+  });
 }
 
 if (require.main === module) {

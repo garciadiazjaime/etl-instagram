@@ -3,8 +3,8 @@ const jsdom = require('jsdom');
 const mapSeries = require('async/mapSeries');
 const debug = require('debug')('app:hastag');
 
-const { Post } = require('../models/instagram')
-const { openDB } = require('../support/database')
+const { Post } = require('../models/instagram');
+const { openDB } = require('../support/database');
 const { waiter, getHTML } = require('../support/fetch');
 const config = require('../config');
 
@@ -32,7 +32,7 @@ function getRecentPosts(recentPosts, hashtag) {
     caption: post.edge_media_to_caption.edges[0].node.text,
     mediaUrl: post.thumbnail_src,
     accessibility: post.accessibility_caption,
-    mediaType: post.__typename,
+    mediaType: post.__typename, // eslint-disable-line no-underscore-dangle
     source: hashtag,
   }));
 }
@@ -42,7 +42,8 @@ function transform(html, hashtag) {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      const recentPosts = getRecentPosts(dom.window._sharedData.entry_data.TagPage[0].graphql.hashtag.edge_hashtag_to_media.edges, hashtag)
+      const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
+      const recentPosts = getRecentPosts(graphql.hashtag.edge_hashtag_to_media.edges, hashtag);
 
       resolve(recentPosts);
     };
@@ -65,16 +66,16 @@ async function main(cookies) {
   debug(posts.length);
 
   if (!posts.length) {
-    return null
+    return null;
   }
 
-  await openDB()
+  await openDB();
 
-  const promises = await mapSeries(posts, async (data) => Post.findOneAndUpdate({ id: data.id }, data, {
+  const promises = await mapSeries(posts, async (data) => Post.findOneAndUpdate({ id: data.id }, data, { // eslint-disable-line
     upsert: true,
   }));
 
-  debug(`new: ${promises.filter(item => item === null).length}`)
+  return debug(`new: ${promises.filter((item) => item === null).length}`);
 }
 
 if (require.main === module) {

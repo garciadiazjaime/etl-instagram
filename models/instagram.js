@@ -1,6 +1,6 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-const Schema = mongoose.Schema;
+const { Schema } = mongoose;
 
 const UserSchema = new mongoose.Schema({
   id: { type: String },
@@ -10,27 +10,27 @@ const UserSchema = new mongoose.Schema({
   followedBy: { type: String },
   postsCount: { type: String },
 }, {
-  timestamps: true
-})
+  timestamps: true,
+});
 
 const LocationSchema = new mongoose.Schema({
-  id: { type:String },
+  id: { type: String },
   name: { type: String },
   slug: { type: String },
   hasPublicPage: { type: String },
   gps: {
     type: { type: String },
-    coordinates: { type: [], default: undefined }
+    coordinates: { type: [], default: undefined },
   },
   address: { type: String },
   phone: { type: String },
   aliasOnFB: { type: String },
   website: { type: String },
 }, {
-  timestamps: true
-})
+  timestamps: true,
+});
 
-LocationSchema.index({ gps: "2dsphere" });
+LocationSchema.index({ gps: '2dsphere' });
 
 const PostSchema = new Schema({
   id: String,
@@ -47,7 +47,7 @@ const PostSchema = new Schema({
   user: UserSchema,
   location: LocationSchema,
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
 const Post = mongoose.model('post', PostSchema);
@@ -58,4 +58,4 @@ module.exports = {
   Post,
   Location,
   User,
-}
+};
