@@ -50,6 +50,7 @@ function getPostUpdated(data) {
 }
 
 async function transform(html, shortcode) {
+  debug('transform', html)
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
