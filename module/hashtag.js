@@ -1,16 +1,21 @@
 const fs = require('fs');
 const jsdom = require('jsdom');
 const mapSeries = require('async/mapSeries');
+const fetch = require('node-fetch');
 const debug = require('debug')('app:hastag');
 
-const { Post } = require('../models/instagram');
+const { Post, Location, User } = require('../models/instagram');
 const { waiter, getHTML } = require('../support/fetch');
+const locationETL = require('./location');
 const config = require('../config');
+
+const postInfoFromQueryStub = require('../stubs/instagram-query-post.json')
+const isProduction = config.get('env') === 'production'
 
 const { JSDOM } = jsdom;
 
 async function extract(hashtag, page) {
-  if (config.get('env') !== 'production') {
+  if (!isProduction) {
     return fs.readFileSync('./stubs/instagram-hashtag.html', 'utf8');
   }
 
@@ -50,12 +55,69 @@ function transform(html, hashtag) {
   });
 }
 
+async function getPostInfoFromQuery() {
+  if (!isProduction) {
+    return postInfoFromQueryStub
+  }
+
+  const queryURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
+  debug(queryURL)
+
+  const response = await fetch(queryURL)
+
+  return response.json()
+}
+
+function getPostUpdated(data) {
+  const response = {
+    user: {
+      id: data.owner.id,
+      username: data.owner.username,
+      fullName: data.owner.full_name,
+      profilePicture: data.owner.profile_pic_url,
+      followedBy: data.owner.edge_followed_by.count,
+      postsCount: data.owner.edge_owner_to_timeline_media.count,
+    },
+  };
+
+  if (data.location) {
+    response.location = {
+      id: data.location.id,
+      name: data.location.name,
+      slug: data.location.slug,
+      hasPublicPage: data.location.has_public_page,
+      address: data.location.address_json,
+    };
+  }
+
+  return response;
+}
+
+async function getLocation(data, page) {
+  const location = await Location.findOne({ id: data.id });
+
+  if (location) {
+    return location;
+  }
+
+  const locationExtra = await locationETL(data, page);
+
+  const newLocation = {
+    ...data,
+    ...locationExtra,
+  };
+
+  await Location(newLocation).save();
+
+  return newLocation;
+}
+
 async function main(page) {
   const hashtags = config.get('instagram.hashtags').split(',');
 
   const posts = [];
 
-  await mapSeries(hashtags, async (hashtag) => {
+  await mapSeries(hashtags.slice(0, 1), async (hashtag) => {
     const html = await extract(hashtag, page);
     const data = await transform(html, hashtag);
     debug(`${hashtag}: ${data.length}`);
@@ -64,6 +126,31 @@ async function main(page) {
 
     await waiter();
   });
+
+  await mapSeries(posts.slice(0, 1), async (item) => {
+    const response = await getPostInfoFromQuery(item)
+
+    const postUpdated = getPostUpdated(response.data.shortcode_media)
+
+    if (postUpdated.user) {
+      await User.findOneAndUpdate({ id: postUpdated.user.id }, postUpdated.user, {
+        upsert: true,
+      });
+    } 
+
+    if (postUpdated.location) {
+      postUpdated.location = await getLocation(postUpdated.location, page);
+    }
+
+    const post = {
+      ...item,
+      ...postUpdated,
+    }
+
+    debug(post)
+
+    posts.push(post)
+  })
 
   debug(posts.length);
 

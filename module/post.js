@@ -106,7 +106,7 @@ async function main(page) {
       upsert: true,
     });
 
-    debug(`updated: ${post.id}`);
+    debug(`updated: ${post.shortcode}`);
 
     await waiter();
   });

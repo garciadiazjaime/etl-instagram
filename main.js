@@ -15,6 +15,8 @@ const config = require('./config');
 const API_URL = config.get('api.url');
 const PORT = config.get('port');
 
+const isProduction = config.get('env') === 'production'
+
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -23,7 +25,7 @@ app.use(morgan('combined'));
 app.get('/', (req, res) => res.json({ msg: ':)' }));
 
 function setupCron(page) {
-  if (config.get('env') !== 'production') {
+  if (!isProduction) {
     return debug('CRON_NOT_SETUP');
   }
 
@@ -48,13 +50,11 @@ app.listen(PORT, async () => {
   await openDB();
   debug('DB opened');
 
-  const cookies = await loginETL();
+  const cookies = isProduction ? await loginETL() : null;
 
   const page = await getPage(cookies);
 
   await hashtagETL(page);
-
-  await postETL(page);
 
   setupCron(page);
 });
