@@ -1,6 +1,5 @@
 const fs = require('fs');
 const puppeteer = require('puppeteer');
-const fetch = require('node-fetch');
 
 const debug = require('debug')('app:fetch');
 
@@ -18,6 +17,7 @@ async function waiter() {
 
 async function getBrowser() {
   const executablePath = '/usr/bin/chromium-browser';
+  debug('executablePath', fs.existsSync(executablePath))
   const opts = fs.existsSync(executablePath) ? {
     headless: true,
     executablePath: '/usr/bin/chromium-browser',
@@ -35,33 +35,28 @@ async function getBrowser() {
 
 async function getHTML(url, cookies) {
   debug(url);
-  // const browser = await getBrowser();
-  // const page = await browser.newPage();
+  const browser = await getBrowser();
+  const page = await browser.newPage();
 
-  // if (Array.isArray(cookies) && cookies.length) {
-  //   await page.setCookie(...cookies);
-  // }
+  if (Array.isArray(cookies) && cookies.length) {
+    await page.setCookie(...cookies);
+  }
 
-  // const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4152.0 Safari/537.36';
-  // await page.setUserAgent(userAgent);
+  const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4152.0 Safari/537.36';
+  await page.setUserAgent(userAgent);
 
-  // try {
-  //   await page.goto(url);
-  // } catch (error) {
-  //   debug(error);
-  // }
+  try {
+    await page.goto(url);
+  } catch (error) {
+    debug(error);
+  }
 
-  // const html = await page.content();
-  // await browser.close();
-
-  // return html;
-  const response = await fetch(url)
-
-  const html = await response.text()
+  const html = await page.content();
+  await browser.close();
 
   debug(html)
 
-  return html
+  return html;
 }
 
 module.exports = {
