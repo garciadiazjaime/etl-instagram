@@ -42,5 +42,7 @@ function setupCron() {
 app.listen(PORT, async () => {
   debug(`Listening on ${PORT}`);
 
+  await hashtagETL();
+
   setupCron();
 });
