@@ -16,6 +16,7 @@ async function waiter() {
 }
 
 async function getBrowser() {
+  debug(fs.existsSync('/app/node_modules/puppeteer/.local-chromium/linux-818858/chrome-linux/chrome'))
   const opts = {
     args: [
       '--no-sandbox',
