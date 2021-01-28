@@ -8,12 +8,12 @@ const { JSDOM } = jsdom;
 
 const isProduction = config.get('env') === 'production';
 
-async function extract(cookies, permalink) {
+async function extract(permalink, page) {
   if (!isProduction) {
     return fs.readFileSync('./stubs/instagram-location.html', 'utf8');
   }
 
-  return getHTML(permalink, cookies);
+  return getHTML(permalink, page);
 }
 
 function getLocation(data) {
@@ -45,10 +45,10 @@ async function transform(html) {
   });
 }
 
-async function main(cookies, location) {
+async function main(location, page) {
   const locationURL = `https://www.instagram.com/explore/locations/${location.id}/${location.slug}/`;
 
-  const html = await extract(cookies, locationURL);
+  const html = await extract(locationURL, page);
 
   const data = await transform(html);
 

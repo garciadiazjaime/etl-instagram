@@ -4,18 +4,17 @@ const mapSeries = require('async/mapSeries');
 const debug = require('debug')('app:hastag');
 
 const { Post } = require('../models/instagram');
-const { openDB } = require('../support/database');
 const { waiter, getHTML } = require('../support/fetch');
 const config = require('../config');
 
 const { JSDOM } = jsdom;
 
-async function extract(cookies, hashtag) {
+async function extract(hashtag, page) {
   if (config.get('env') !== 'production') {
     return fs.readFileSync('./stubs/instagram-hashtag.html', 'utf8');
   }
 
-  return getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, cookies);
+  return getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
 }
 
 function getRecentPosts(recentPosts, hashtag) {
@@ -42,7 +41,7 @@ function transform(html, hashtag) {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      debug(`onload:${hashtag}`)
+      debug(`${hashtag}:onload`)
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const recentPosts = getRecentPosts(graphql.hashtag.edge_hashtag_to_media.edges, hashtag);
 
@@ -51,13 +50,13 @@ function transform(html, hashtag) {
   });
 }
 
-async function main(cookies) {
+async function main(page) {
   const hashtags = config.get('instagram.hashtags').split(',')
 
   const posts = [];
 
   await mapSeries(hashtags, async (hashtag) => {
-    const html = await extract(cookies, hashtag);
+    const html = await extract(hashtag, page);
     const data = await transform(html, hashtag);
     debug(`${hashtag}: ${data.length}`)
 
@@ -71,8 +70,6 @@ async function main(cookies) {
   if (!posts.length) {
     return null;
   }
-
-  await openDB();
 
   const promises = await mapSeries(posts, async (data) => Post.findOneAndUpdate({ id: data.id }, data, { // eslint-disable-line
     upsert: true,

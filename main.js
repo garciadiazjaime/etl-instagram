@@ -8,6 +8,8 @@ const debug = require('debug')('app:main');
 const hashtagETL = require('./module/hashtag');
 const postETL = require('./module/post');
 const loginETL = require('./module/login')
+const { openDB } = require('./support/database');
+const { getPage } = require('./support/fetch')
 const config = require('./config');
 
 const API_URL = config.get('api.url');
@@ -20,17 +22,17 @@ app.use(morgan('combined'));
 
 app.get('/', (req, res) => res.json({ msg: ':)' }));
 
-function setupCron(cookies) {
+function setupCron(page) {
   if (config.get('env') !== 'production') {
     return debug('CRON_NOT_SETUP');
   }
 
   cron.schedule('42 */4 * * *', async () => {
-    await hashtagETL(cookies);
+    await hashtagETL(page);
   });
 
   cron.schedule('50 */6 * * *', async () => {
-    await postETL(cookies);
+    await postETL(page);
   });
 
   cron.schedule('*/20 * * * *', async () => {
@@ -43,9 +45,14 @@ function setupCron(cookies) {
 app.listen(PORT, async () => {
   debug(`Listening on ${PORT}`);
 
+  await openDB();
+  debug('DB opened')
+
   const cookies = await loginETL();
 
-  await hashtagETL(cookies);
+  const page = await getPage(cookies)
 
-  setupCron(cookies);
+  await postETL(page);
+
+  setupCron(page);
 });

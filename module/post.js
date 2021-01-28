@@ -5,7 +5,6 @@ const debug = require('debug')('app:post');
 
 const locationETL = require('./location');
 const { Post, Location, User } = require('../models/instagram');
-const { openDB } = require('../support/database');
 const { waiter, getHTML } = require('../support/fetch');
 const config = require('../config');
 
@@ -14,12 +13,12 @@ const { JSDOM } = jsdom;
 const isProduction = config.get('env') === 'production';
 const stubShortcode = 'CKfDyQDgl6W';
 
-async function extract(cookies, permalink) {
+async function extract(permalink, page) {
   if (!isProduction) {
     return fs.readFileSync('./stubs/instagram-post.html', 'utf8');
   }
 
-  return getHTML(permalink, cookies);
+  return getHTML(permalink, page);
 }
 
 function getPostUpdated(data) {
@@ -63,14 +62,14 @@ async function transform(html, shortcode) {
   });
 }
 
-async function getLocation(cookies, data) {
+async function getLocation(data, page) {
   const location = await Location.findOne({ id: data.id });
 
   if (location) {
     return location
   }
 
-  const locationExtra = await locationETL(cookies, data);
+  const locationExtra = await locationETL(data, page);
 
   const newLocation = {
     ...data,
@@ -82,23 +81,21 @@ async function getLocation(cookies, data) {
   return newLocation
 }
 
-async function main(cookies) {
-  await openDB();
-
+async function main(page) {
   const limit = 40;
   const posts = await Post.find({ user: { $exists: 0 } }).limit(limit);
 
   debug(`processing ${posts.length}`);
 
   await mapSeries(posts.slice(0, 1), async (post) => {
-    const html = await extract(cookies, post.permalink);
+    const html = await extract(post.permalink, page);
 
     const shortcode = !isProduction ? stubShortcode : post.shortcode;
 
     const data = await transform(html, shortcode);
 
     if (data.location) {
-      data.location = await getLocation(cookies, data.location)
+      data.location = await getLocation(data.location, page)
     }
 
     await User.findOneAndUpdate({ id: data.user.id }, data.user, {
@@ -111,6 +108,8 @@ async function main(cookies) {
 
     await waiter();
   });
+
+  debug(`done`);
 }
 
 if (require.main === module) {

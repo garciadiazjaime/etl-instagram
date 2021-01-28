@@ -14,7 +14,7 @@ async function waiter() {
   });
 }
 
-async function getBrowser() {
+async function getPage(cookies) {
   const opts = {
     headless: true,
     args: [
@@ -26,12 +26,6 @@ async function getBrowser() {
 
   const browser = await puppeteer.launch(opts);
 
-  return browser;
-}
-
-async function getHTML(url, cookies) {
-  debug(url);
-  const browser = await getBrowser();
   const page = await browser.newPage();
 
   if (Array.isArray(cookies) && cookies.length) {
@@ -41,6 +35,12 @@ async function getHTML(url, cookies) {
   const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4152.0 Safari/537.36';
   await page.setUserAgent(userAgent);
 
+  return page;
+}
+
+async function getHTML(url, page) {
+  debug(url);
+
   try {
     await page.goto(url);
   } catch (error) {
@@ -48,7 +48,6 @@ async function getHTML(url, cookies) {
   }
 
   const html = await page.content();
-  await browser.close();
 
   return html;
 }
@@ -56,5 +55,5 @@ async function getHTML(url, cookies) {
 module.exports = {
   waiter,
   getHTML,
-  getBrowser,
+  getPage,
 };
