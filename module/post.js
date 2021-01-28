@@ -50,11 +50,12 @@ function getPostUpdated(data) {
 }
 
 async function transform(html, shortcode) {
-  debug('transform', html)
+  debug(`transform:${shortcode}`)
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
+      debug(dom.window.__additionalData)
       const { graphql } = dom.window.__additionalData[`/p/${shortcode}/`].data; // eslint-disable-line
       const response = getPostUpdated(graphql.shortcode_media);
 
