@@ -52,7 +52,6 @@ function transform(html, hashtag) {
 
 async function main(cookies) {
   const hashtags = config.get('instagram.hashtags').split(',')
-  debug(hashtags)
 
   const posts = [];
 
