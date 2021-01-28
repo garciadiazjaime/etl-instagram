@@ -7,7 +7,7 @@ async function main() {
   const url = 'https://www.instagram.com/accounts/login';
 
   const page = await getPage();
-  debug(page)
+
   debug(url);
 
   await page.goto(url);
