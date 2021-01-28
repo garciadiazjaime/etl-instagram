@@ -16,17 +16,13 @@ async function waiter() {
 }
 
 async function getBrowser() {
-  const executablePath = '/usr/bin/chromium-browser';
-  debug('executablePath', fs.existsSync(executablePath))
-  const opts = fs.existsSync(executablePath) ? {
-    headless: true,
-    executablePath: '/usr/bin/chromium-browser',
+  const opts = {
     args: [
       '--no-sandbox',
       '--disable-gpu',
       '--headless',
     ],
-  } : {};
+  };
 
   const browser = await puppeteer.launch(opts);
 
