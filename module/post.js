@@ -50,12 +50,11 @@ function getPostUpdated(data) {
 }
 
 async function transform(html, shortcode) {
-  debug(`transform:${shortcode}`)
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      debug(dom.window.__additionalData)
+      debug(`transform:${shortcode}`)
       const { graphql } = dom.window.__additionalData[`/p/${shortcode}/`].data; // eslint-disable-line
       const response = getPostUpdated(graphql.shortcode_media);
 
@@ -84,12 +83,11 @@ async function getLocation(data, page) {
 }
 
 async function main(page) {
-  const limit = 40;
-  const posts = await Post.find({ user: { $exists: 0 } }).limit(limit);
+  const posts = await Post.find({ user: { $exists: 0 } }).limit(40);
 
   debug(`processing ${posts.length}`);
 
-  await mapSeries(posts.slice(0, 1), async (post) => {
+  await mapSeries(posts, async (post) => {
     const html = await extract(post.permalink, page);
 
     const shortcode = !isProduction ? stubShortcode : post.shortcode;
@@ -108,10 +106,10 @@ async function main(page) {
       upsert: true,
     });
 
+    debug(`updated: ${post.id}`);
+
     await waiter();
   });
-
-  debug('done');
 }
 
 if (require.main === module) {
