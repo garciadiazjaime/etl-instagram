@@ -12,7 +12,11 @@ async function main() {
   const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4152.0 Safari/537.36';
   await page.setUserAgent(userAgent);
 
+  debug(url)
   await page.goto(url);
+
+  const html = await page.content();
+  debug(html)
 
   await page.waitForSelector('form', { timeout: 1000 * 3 });
 
