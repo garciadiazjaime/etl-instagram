@@ -29,6 +29,16 @@ const config = convict({
       env: 'API_URL',
     },
   },
+  instagram: {
+    username: {
+      env: 'INSTAGRAM_USERNAME',
+      default: '',
+    },
+    password: {
+      env: 'INSTAGRAM_USER_PASSWORD',
+      default: '',
+    },
+  },
 });
 
 // Perform validation

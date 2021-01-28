@@ -26,6 +26,7 @@
     "start": "node ./main.js",
     "hashtag": "DEBUG=app* node ./module/hashtag",
     "post": "DEBUG=app* node ./module/post",
+    "login": "DEBUG=app* node ./module/login",
     "deploy": "git push heroku",
     "lint": "npx eslint ."
   },
