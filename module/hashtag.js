@@ -42,6 +42,7 @@ function transform(html, hashtag) {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
+      debug(`onload:${hashtag}`)
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const recentPosts = getRecentPosts(graphql.hashtag.edge_hashtag_to_media.edges, hashtag);
 
@@ -58,6 +59,7 @@ async function main(cookies) {
   await mapSeries(hashtags, async (hashtag) => {
     const html = await extract(cookies, hashtag);
     const data = await transform(html, hashtag);
+    debug(`${hashtag}: ${data.length}`)
 
     posts.push(...data);
 
