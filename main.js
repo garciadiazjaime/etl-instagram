@@ -7,9 +7,9 @@ const debug = require('debug')('app:main');
 
 const hashtagETL = require('./module/hashtag');
 const postETL = require('./module/post');
-const loginETL = require('./module/login')
+const loginETL = require('./module/login');
 const { openDB } = require('./support/database');
-const { getPage } = require('./support/fetch')
+const { getPage } = require('./support/fetch');
 const config = require('./config');
 
 const API_URL = config.get('api.url');
@@ -46,11 +46,11 @@ app.listen(PORT, async () => {
   debug(`Listening on ${PORT}`);
 
   await openDB();
-  debug('DB opened')
+  debug('DB opened');
 
   const cookies = await loginETL();
 
-  const page = await getPage(cookies)
+  const page = await getPage(cookies);
 
   await postETL(page);
 

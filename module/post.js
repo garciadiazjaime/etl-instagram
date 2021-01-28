@@ -66,19 +66,19 @@ async function getLocation(data, page) {
   const location = await Location.findOne({ id: data.id });
 
   if (location) {
-    return location
+    return location;
   }
 
   const locationExtra = await locationETL(data, page);
 
   const newLocation = {
     ...data,
-    locationExtra
-  }
+    locationExtra,
+  };
 
-  await Location(newLocation).save()
+  await Location(newLocation).save();
 
-  return newLocation
+  return newLocation;
 }
 
 async function main(page) {
@@ -95,7 +95,7 @@ async function main(page) {
     const data = await transform(html, shortcode);
 
     if (data.location) {
-      data.location = await getLocation(data.location, page)
+      data.location = await getLocation(data.location, page);
     }
 
     await User.findOneAndUpdate({ id: data.user.id }, data.user, {
@@ -109,7 +109,7 @@ async function main(page) {
     await waiter();
   });
 
-  debug(`done`);
+  debug('done');
 }
 
 if (require.main === module) {

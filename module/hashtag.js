@@ -41,7 +41,7 @@ function transform(html, hashtag) {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      debug(`${hashtag}:onload`)
+      debug(`${hashtag}:onload`);
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const recentPosts = getRecentPosts(graphql.hashtag.edge_hashtag_to_media.edges, hashtag);
 
@@ -51,14 +51,14 @@ function transform(html, hashtag) {
 }
 
 async function main(page) {
-  const hashtags = config.get('instagram.hashtags').split(',')
+  const hashtags = config.get('instagram.hashtags').split(',');
 
   const posts = [];
 
   await mapSeries(hashtags, async (hashtag) => {
     const html = await extract(hashtag, page);
     const data = await transform(html, hashtag);
-    debug(`${hashtag}: ${data.length}`)
+    debug(`${hashtag}: ${data.length}`);
 
     posts.push(...data);
 

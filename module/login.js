@@ -8,7 +8,7 @@ async function main() {
 
   const page = await getPage();
 
-  debug(url)
+  debug(url);
 
   await page.goto(url);
 
