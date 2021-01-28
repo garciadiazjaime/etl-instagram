@@ -25,8 +25,6 @@ function setupCron(cookies) {
     return debug('CRON_NOT_SETUP');
   }
 
-  debug('CRON_SETUP');
-
   cron.schedule('42 */4 * * *', async () => {
     await hashtagETL(cookies);
   });

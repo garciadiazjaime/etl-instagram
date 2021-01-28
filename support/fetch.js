@@ -17,7 +17,6 @@ async function waiter() {
 
 async function getBrowser() {
   const opts = {
-    headless: true,
     args: [
       '--no-sandbox',
       '--disable-gpu',
@@ -50,8 +49,6 @@ async function getHTML(url, cookies) {
 
   const html = await page.content();
   await browser.close();
-
-  debug(html)
 
   return html;
 }
