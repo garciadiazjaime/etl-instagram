@@ -55,7 +55,7 @@ function transform(html, hashtag) {
   });
 }
 
-async function getPostInfoFromQuery() {
+async function getPostInfoFromQuery(post) {
   if (!isProduction) {
     return postInfoFromQueryStub
   }
