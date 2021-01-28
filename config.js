@@ -38,6 +38,10 @@ const config = convict({
       env: 'INSTAGRAM_USER_PASSWORD',
       default: '',
     },
+    hashtags: {
+      env: 'INSTAGRAM_HASHTAGS',
+      default: '',
+    },
   },
 });
 

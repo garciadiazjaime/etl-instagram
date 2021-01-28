@@ -51,7 +51,8 @@ function transform(html, hashtag) {
 }
 
 async function main(cookies) {
-  const hashtags = ['valledeguadalupe'];
+  const hashtags = config.get('instagram.hashtags').split(',')
+
   const posts = [];
 
   await mapSeries(hashtags, async (hashtag) => {
