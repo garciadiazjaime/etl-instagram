@@ -17,6 +17,7 @@ async function waiter() {
 
 async function getBrowser() {
   const opts = {
+    headless: true,
     args: [
       '--no-sandbox',
       '--disable-gpu',
