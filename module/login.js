@@ -10,9 +10,15 @@ async function main() {
 
   debug(url);
 
-  await page.goto(url);
+  try {
+    await page.goto(url);
+  } catch (error) {
+    debug('login:error')
+    debug(error);
+  }
 
-  await page.content();
+  const html = await page.content();
+  debug(html)
 
   await page.waitForSelector('form', { timeout: 1000 * 3 });
 
