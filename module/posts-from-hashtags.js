@@ -171,7 +171,7 @@ async function getPostsExtended(posts, page) {
       postExtended.location = location;
     }
 
-    posts.push(postExtended);
+    response.push(postExtended);
 
     count += 1
 
