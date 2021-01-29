@@ -11,13 +11,13 @@ const isProduction = config.get('env') === 'production'
 
 const { JSDOM } = jsdom;
 
+async function hashtagETL(hashtag, page) {
+  const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
 
-function getPostsFromHashtag(html, hashtag) {
   return new Promise((resolve, reject) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      debug(`${hashtag}:onload`);
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const { edges } = graphql.hashtag.edge_hashtag_to_media
 
@@ -41,6 +41,22 @@ function getPostsFromHashtag(html, hashtag) {
       return resolve(response);
     };
   });
+}
+
+async function getPostsFromHashtags(hashtags, page) {
+  const response = []
+
+  await mapSeries(isProduction ? hashtags : hashtags.slice(0, 1), async (hashtag) => {
+    const posts = await hashtagETL(hashtag, page);
+
+    debug(`${hashtag}:${posts.length}`);
+
+    response.push(...posts);
+
+    await waiter();
+  });
+
+  return response
 }
 
 async function getLocation(rawLocation) {
@@ -115,19 +131,11 @@ async function getPostUserAndLocation(post) {
 async function main(page) {
   const hashtags = config.get('instagram.hashtags').split(',');
 
-  const posts = [];
-
-  await mapSeries(isProduction ? hashtags : hashtags.slice(0, 1), async (hashtag) => {
-    const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
-    const postsFromHashtag = await getPostsFromHashtag(html, hashtag);
-    debug(`${hashtag}: ${postsFromHashtag.length}`);
-
-    posts.push(...postsFromHashtag);
-
-    await waiter();
-  });
-
-  await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
+  const postsFromHashtags = await getPostsFromHashtags(hashtags, page)
+  debug(`posts_from_hashtags:${postsFromHashtags.length}`)
+  
+  const posts = []
+  await mapSeries(isProduction ? postsFromHashtags : postsFromHashtags.slice(0, 1), async (post) => {
     const { user, location } = await getPostUserAndLocation(post)
 
     await User.findOneAndUpdate({ id: user.id }, user, {
