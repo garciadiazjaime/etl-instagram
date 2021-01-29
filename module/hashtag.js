@@ -60,7 +60,7 @@ async function getPostInfoFromQuery(post) {
   }
 
   const queryURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
-  debug(queryURL)
+  debug(`query:${post.shortcode}`)
 
   const response = await fetch(queryURL)
 
@@ -100,7 +100,7 @@ async function getLocation(data) {
   }
 
   const queryURL = `https://www.instagram.com/explore/locations/${data.id}/${data.slug}/?__a=1`
-  debug(queryURL)
+  debug(`location:${data.id}/${data.slug}`)
 
   const response = await fetch(queryURL)
 
@@ -164,6 +164,8 @@ async function main(page) {
     }
 
     posts.push(post)
+
+    await waiter();
   })
 
   debug(posts.length);
