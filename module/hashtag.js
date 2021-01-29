@@ -13,43 +13,33 @@ const isProduction = config.get('env') === 'production'
 
 const { JSDOM } = jsdom;
 
-async function extract(hashtag, page) {
-  if (!isProduction) {
-    return fs.readFileSync('./stubs/instagram-hashtag.html', 'utf8');
-  }
-
-  return getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
-}
-
-function getRecentPosts(recentPosts, hashtag) {
-  if (!Array.isArray(recentPosts) || !recentPosts.length) {
-    return null;
-  }
-
-  return recentPosts.map(({ node: post }) => ({
-    id: post.id,
-    likeCount: post.edge_media_preview_like.count,
-    commentsCount: post.edge_media_to_comment.count,
-    permalink: `https://www.instagram.com/p/${post.shortcode}/`,
-    shortcode: post.shortcode,
-    caption: post.edge_media_to_caption.edges[0].node.text,
-    mediaUrl: post.thumbnail_src,
-    accessibility: post.accessibility_caption,
-    mediaType: post.__typename, // eslint-disable-line no-underscore-dangle
-    source: hashtag,
-  }));
-}
-
-function transform(html, hashtag) {
+function getRecentPosts(html, hashtag) {
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
       debug(`${hashtag}:onload`);
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
-      const recentPosts = getRecentPosts(graphql.hashtag.edge_hashtag_to_media.edges, hashtag);
+      const { edges } = graphql.hashtag.edge_hashtag_to_media
 
-      resolve(recentPosts);
+      if (!Array.isArray(edges) || !response.edges) {
+        return null;
+      }
+    
+      const response = edges.map(({ node: post }) => ({
+        id: post.id,
+        likeCount: post.edge_media_preview_like.count,
+        commentsCount: post.edge_media_to_comment.count,
+        permalink: `https://www.instagram.com/p/${post.shortcode}/`,
+        shortcode: post.shortcode,
+        caption: post.edge_media_to_caption.edges[0].node.text,
+        mediaUrl: post.thumbnail_src,
+        accessibility: post.accessibility_caption,
+        mediaType: post.__typename, // eslint-disable-line no-underscore-dangle
+        source: hashtag,
+      }));
+
+      return resolve(response);
     };
   });
 }
@@ -59,14 +49,14 @@ async function getPostInfoFromQuery(post) {
     return postInfoFromQueryStub
   }
 
-  const queryURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
   debug(`query:${post.shortcode}`)
+  const queryURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
 
   const response = await fetch(queryURL)
-  const html = await response.text()
-  debug(html)
+  const data = await response.json()
+  debug(data)
 
-  return response.json()
+  return data
 }
 
 function getPostUpdated(data) {
@@ -136,8 +126,8 @@ async function main(page) {
   const posts = [];
 
   await mapSeries(hashtags, async (hashtag) => {
-    const html = await extract(hashtag, page);
-    const data = await transform(html, hashtag);
+    const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
+    const data = await getRecentPosts(html, hashtag);
     debug(`${hashtag}: ${data.length}`);
 
     posts.push(...data);
