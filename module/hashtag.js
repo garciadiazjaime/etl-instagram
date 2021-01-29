@@ -56,6 +56,8 @@ async function getPostsFromHashtags(hashtags, page) {
     await waiter();
   });
 
+  debug(`getPostsFromHashtags:${response.length}`)
+
   return response
 }
 
@@ -99,12 +101,13 @@ async function getLocation(rawLocation) {
   return location
 }
 
-async function getPostUserAndLocation(post) {
+async function postETL(post) {
   debug(`query:${post.shortcode}`)
   const queryURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
 
   const response = await fetch(queryURL)
   const rawData = await response.json()
+  debug(rawData)
 
   const { shortcode_media: data } = rawData.data
 
@@ -128,15 +131,11 @@ async function getPostUserAndLocation(post) {
   return postExtended;
 }
 
-async function main(page) {
-  const hashtags = config.get('instagram.hashtags').split(',');
+async function getPostsExtended(posts) {
+  const response = []
 
-  const postsFromHashtags = await getPostsFromHashtags(hashtags, page)
-  debug(`posts_from_hashtags:${postsFromHashtags.length}`)
-  
-  const posts = []
-  await mapSeries(isProduction ? postsFromHashtags : postsFromHashtags.slice(0, 1), async (post) => {
-    const { user, location } = await getPostUserAndLocation(post)
+  await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
+    const { user, location } = await postETL(post)
 
     await User.findOneAndUpdate({ id: user.id }, user, {
       upsert: true,
@@ -156,13 +155,27 @@ async function main(page) {
     await waiter();
   })
 
-  debug(posts.length);
+  debug(`getPostsExtended:${response.length}`);
 
+  return response
+}
+
+async function savePosts(posts) {
   const promises = await mapSeries(posts, async (data) => Post.findOneAndUpdate({ id: data.id }, data, { // eslint-disable-line
     upsert: true,
   }));
 
-  return debug(`new: ${promises.filter((item) => item === null).length}`);
+  debug(`new: ${promises.filter((item) => item === null).length}`);
+}
+
+async function main(page) {
+  const hashtags = config.get('instagram.hashtags').split(',');
+
+  const postsFromHashtags = await getPostsFromHashtags(hashtags, page)
+  
+  const posts = await getPostsExtended(postsFromHashtags)
+
+  await savePosts(posts)  
 }
 
 if (require.main === module) {
