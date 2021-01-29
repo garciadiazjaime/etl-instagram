@@ -93,23 +93,40 @@ function getPostUpdated(data) {
   return response;
 }
 
-async function getLocation(data, page) {
+async function getLocation(data) {
   const location = await Location.findOne({ id: data.id });
 
   if (location) {
     return location;
   }
 
-  const locationExtra = await locationETL(data, page);
+  const queryURL = `https://www.instagram.com/explore/locations/${data.id}/${data.slug}/?__a=1`
+  debug(queryURL)
+
+  const response = await fetch(queryURL)
+
+  const locationResponse = await response.json()
+
+  const item = locationResponse.graphql.location
 
   const newLocation = {
     ...data,
-    ...locationExtra,
+    phone: item.phone,
+    aliasOnFB: item.primary_alias_on_fb,
+    website: item.website,
+    blurb: item.blurb
   };
+
+  if (item.lat && item.lng) {
+    newLocation.gps = {
+      type: 'Point',
+      coordinates: [item.lng, item.lat],
+    };
+  }
 
   await Location(newLocation).save();
 
-  return newLocation;
+  return newLocation
 }
 
 async function main(page) {
@@ -139,7 +156,7 @@ async function main(page) {
     } 
 
     if (postUpdated.location) {
-      postUpdated.location = await getLocation(postUpdated.location, page);
+      postUpdated.location = await getLocation(postUpdated.location);
     }
 
     const post = {

@@ -26,6 +26,7 @@ const LocationSchema = new mongoose.Schema({
   phone: { type: String },
   aliasOnFB: { type: String },
   website: { type: String },
+  blurb: { type: String },
 }, {
   timestamps: true,
 });
