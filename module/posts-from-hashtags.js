@@ -39,8 +39,6 @@ async function hashtagETL(hashtag, page) {
         source: hashtag,
       }));
 
-      debug(`${hashtag}:${response.length}`);
-
       return resolve(response);
     };
   });
@@ -50,8 +48,6 @@ async function getPostsFromHashtag(hashtag, page) {
   const posts = await hashtagETL(hashtag, page);
 
   await waiter();
-
-  debug(`getPostsFromHashtag:${posts.length}`);
 
   return posts;
 }
@@ -169,22 +165,12 @@ async function getPostsExtended(posts, page) {
 
     count += 1
 
-    debug(`post_done:${count}/${posts.length}`)
+    debug(`post_done:${post.shortcode}:${count}/${posts.length}`)
 
     await waiter();
   });
 
-  debug(`getPostsExtended:${response.length}`);
-
   return response;
-}
-
-async function savePosts(posts) {
-  const promises = await mapSeries(posts, async (data) => Post.findOneAndUpdate({ id: data.id }, data, { // eslint-disable-line
-    upsert: true,
-  }));
-
-  debug(`new: ${promises.filter((item) => item === null).length}`);
 }
 
 async function main(page) {
@@ -193,10 +179,15 @@ async function main(page) {
 
   await mapSeries(hashtags, async (hashtag) => {
     const postsFromHashtag = await getPostsFromHashtag(hashtag, page);
+    debug(`${hashtag}:postsFromHashtag:${postsFromHashtag.length}`);
 
-    const posts = await getPostsExtended(postsFromHashtag, page);
+    const posts = await getPostsExtended(postsFromHashtag, page, hashtag);
+    debug(`${hashtag}:getPostsExtended:${posts.length}`);
 
-    await savePosts(posts);
+    const promises = await mapSeries(posts, async (data) => Post.findOneAndUpdate({ id: data.id }, data, { // eslint-disable-line
+      upsert: true,
+    }));
+    debug(`${hashtag}:new:${promises.filter((item) => item === null).length}`);
   })
 }
 
