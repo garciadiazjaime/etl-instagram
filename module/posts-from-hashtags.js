@@ -185,7 +185,7 @@ async function savePosts(posts) {
 async function main(page) {
   const hashtags = config.get('instagram.hashtags').split(',');
 
-  const postsFromHashtags = await getPostsFromHashtags(hashtags, page);
+  const postsFromHashtags = await getPostsFromHashtags(hashtags.slice(0, 1), page);
 
   const posts = await getPostsExtended(postsFromHashtags);
 
