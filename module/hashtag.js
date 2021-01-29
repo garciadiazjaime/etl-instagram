@@ -7,22 +7,19 @@ const { Post, Location, User } = require('../models/instagram');
 const { waiter, getHTML } = require('../support/fetch');
 const config = require('../config');
 
-const postInfoFromQueryStub = require('../stubs/instagram-query-post.json');
-const { reject } = require('async');
 const isProduction = config.get('env') === 'production'
 
 const { JSDOM } = jsdom;
 
 
 function getPostsFromHashtag(html, hashtag) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
       debug(`${hashtag}:onload`);
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const { edges } = graphql.hashtag.edge_hashtag_to_media
-      console.log(edges)
 
       if (!Array.isArray(edges) || !edges) {
         return reject(`${hashtag}:NO_EDGES`);
@@ -46,19 +43,56 @@ function getPostsFromHashtag(html, hashtag) {
   });
 }
 
-async function getPostInfoFromQuery(post) {
+async function getLocation(rawLocation) {
+  const result = await Location.findOne({ id: rawLocation.id });
+
+  if (result) {
+    return result;
+  }
+
+  const queryURL = `https://www.instagram.com/explore/locations/${rawLocation.id}/${rawLocation.slug}/?__a=1`
+  debug(`location:${rawLocation.id}/${rawLocation.slug}`)
+
+  const response = await fetch(queryURL)
+  const json = await response.json()
+
+  const { location: rawLocationExtended } = json.graphql
+
+  const location = {
+    id: rawLocation.id,
+    name: rawLocation.name,
+    slug: rawLocation.slug,
+    hasPublicPage: rawLocation.has_public_page,
+    address: rawLocation.address_json,
+
+    phone: rawLocationExtended.phone,
+    aliasOnFB: rawLocationExtended.primary_alias_on_fb,
+    website: rawLocationExtended.website,
+    blurb: rawLocationExtended.blurb
+  };
+
+  if (rawLocationExtended.lat && rawLocationExtended.lng) {
+    location.gps = {
+      type: 'Point',
+      coordinates: [rawLocationExtended.lng, rawLocationExtended.lat],
+    };
+  }
+
+  await Location(location).save();
+
+  return location
+}
+
+async function getPostUserAndLocation(post) {
   debug(`query:${post.shortcode}`)
   const queryURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
 
   const response = await fetch(queryURL)
-  const data = await response.json()
-  debug(data)
+  const rawData = await response.json()
 
-  return data
-}
+  const { shortcode_media: data } = rawData.data
 
-function getPostUpdated(data) {
-  const response = {
+  const postExtended = {
     user: {
       id: data.owner.id,
       username: data.owner.username,
@@ -70,52 +104,12 @@ function getPostUpdated(data) {
   };
 
   if (data.location) {
-    response.location = {
-      id: data.location.id,
-      name: data.location.name,
-      slug: data.location.slug,
-      hasPublicPage: data.location.has_public_page,
-      address: data.location.address_json,
-    };
+    const location = await getLocation(data.location);
+
+    postExtended.location = location
   }
 
-  return response;
-}
-
-async function getLocation(data) {
-  const location = await Location.findOne({ id: data.id });
-
-  if (location) {
-    return location;
-  }
-
-  const queryURL = `https://www.instagram.com/explore/locations/${data.id}/${data.slug}/?__a=1`
-  debug(`location:${data.id}/${data.slug}`)
-
-  const response = await fetch(queryURL)
-
-  const locationResponse = await response.json()
-
-  const item = locationResponse.graphql.location
-
-  const newLocation = {
-    ...data,
-    phone: item.phone,
-    aliasOnFB: item.primary_alias_on_fb,
-    website: item.website,
-    blurb: item.blurb
-  };
-
-  if (item.lat && item.lng) {
-    newLocation.gps = {
-      type: 'Point',
-      coordinates: [item.lng, item.lat],
-    };
-  }
-
-  await Location(newLocation).save();
-
-  return newLocation
+  return postExtended;
 }
 
 async function main(page) {
@@ -123,7 +117,7 @@ async function main(page) {
 
   const posts = [];
 
-  await mapSeries(hashtags.slice(0, 1), async (hashtag) => {
+  await mapSeries(isProduction ? hashtags : hashtags.slice(0, 1), async (hashtag) => {
     const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
     const postsFromHashtag = await getPostsFromHashtag(html, hashtag);
     debug(`${hashtag}: ${postsFromHashtag.length}`);
@@ -133,37 +127,28 @@ async function main(page) {
     await waiter();
   });
 
-  await mapSeries(posts.slice(0, 1), async (item) => {
-    const response = await getPostInfoFromQuery(item)
+  await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
+    const { user, location } = await getPostUserAndLocation(post)
 
-    const postUpdated = getPostUpdated(response.data.shortcode_media)
-    debug(postUpdated)
+    await User.findOneAndUpdate({ id: user.id }, user, {
+      upsert: true,
+    });
 
-    if (postUpdated.user) {
-      await User.findOneAndUpdate({ id: postUpdated.user.id }, postUpdated.user, {
-        upsert: true,
-      });
-    } 
-
-    if (postUpdated.location) {
-      postUpdated.location = await getLocation(postUpdated.location);
+    const postExtended = {
+      ...post,
+      user,
     }
 
-    const post = {
-      ...item,
-      ...postUpdated,
+    if (location) {
+      postExtended.location = location
     }
 
-    posts.push(post)
+    posts.push(postExtended)
 
     await waiter();
   })
 
   debug(posts.length);
-
-  if (!posts.length) {
-    return null;
-  }
 
   const promises = await mapSeries(posts, async (data) => Post.findOneAndUpdate({ id: data.id }, data, { // eslint-disable-line
     upsert: true,
