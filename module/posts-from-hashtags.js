@@ -105,19 +105,18 @@ async function locationETL(rawLocation) {
   return location;
 }
 
-async function postETL(post) {
+async function postETL(post, page) {
   debug(`query:${post.shortcode}`);
   const postURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`;
-
-  const response = await fetch(postURL);
-  const html = await response.text();
-
-  if (html.includes('Login • Instagram')) {
-    debug(html);
+  const response = await getHTML(postURL, page);
+  if (response.includes('Login • Instagram')) {
+    debug('LOGIN');
     return {}
   }
 
-  const rawData = JSON.parse(html)
+  const rawData = await page.evaluate(() =>  {
+    return JSON.parse(document.querySelector("body").innerText); 
+  });
 
   const { shortcode_media: data } = rawData.data;
 
@@ -141,11 +140,11 @@ async function postETL(post) {
   return postExtended;
 }
 
-async function getPostsExtended(posts) {
+async function getPostsExtended(posts, page) {
   const response = [];
 
   await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
-    const { user, location } = await postETL(post);
+    const { user, location } = await postETL(post, page);
 
     if (!user) {
       return null
@@ -187,7 +186,7 @@ async function main(page) {
 
   const postsFromHashtags = await getPostsFromHashtags(hashtags.slice(0, 1), page);
 
-  const posts = await getPostsExtended(postsFromHashtags);
+  const posts = await getPostsExtended(postsFromHashtags, page);
 
   await savePosts(posts);
 }
