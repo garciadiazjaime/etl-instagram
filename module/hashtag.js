@@ -6,7 +6,6 @@ const debug = require('debug')('app:hastag');
 
 const { Post, Location, User } = require('../models/instagram');
 const { waiter, getHTML } = require('../support/fetch');
-const locationETL = require('./location');
 const config = require('../config');
 
 const postInfoFromQueryStub = require('../stubs/instagram-query-post.json')
@@ -163,8 +162,6 @@ async function main(page) {
       ...item,
       ...postUpdated,
     }
-
-    debug(post)
 
     posts.push(post)
   })

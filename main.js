@@ -6,7 +6,6 @@ const fetch = require('node-fetch');
 const debug = require('debug')('app:main');
 
 const hashtagETL = require('./module/hashtag');
-const postETL = require('./module/post');
 const loginETL = require('./module/login');
 const { openDB } = require('./support/database');
 const { getPage } = require('./support/fetch');
@@ -31,10 +30,6 @@ function setupCron(page) {
 
   cron.schedule('42 */4 * * *', async () => {
     await hashtagETL(page);
-  });
-
-  cron.schedule('50 */6 * * *', async () => {
-    await postETL(page);
   });
 
   cron.schedule('*/20 * * * *', async () => {
