@@ -49,9 +49,7 @@ app.listen(PORT, async () => {
 
   const page = await getPage(cookies);
 
-  const hashtags = config.get('instagram.hashtags').split(',');
-
-  await hashtagETL(hashtags.slice(0, 1), page);
+  await hashtagETL(page);
 
   setupCron(page);
 });

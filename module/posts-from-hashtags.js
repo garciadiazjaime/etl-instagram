@@ -46,20 +46,14 @@ async function hashtagETL(hashtag, page) {
   });
 }
 
-async function getPostsFromHashtags(hashtags, page) {
-  const response = [];
+async function getPostsFromHashtag(hashtag, page) {
+  const posts = await hashtagETL(hashtag, page);
 
-  await mapSeries(isProduction ? hashtags : hashtags.slice(0, 1), async (hashtag) => {
-    const posts = await hashtagETL(hashtag, page);
+  await waiter();
 
-    response.push(...posts);
+  debug(`getPostsFromHashtag:${posts.length}`);
 
-    await waiter();
-  });
-
-  debug(`getPostsFromHashtags:${response.length}`);
-
-  return response;
+  return posts;
 }
 
 async function locationETL(rawLocation) {
@@ -193,13 +187,17 @@ async function savePosts(posts) {
   debug(`new: ${promises.filter((item) => item === null).length}`);
 }
 
-async function main(hashtags, page) {
+async function main(page) {
+  const data = config.get('instagram.hashtags').split(',');
+  const hashtags = isProduction ? data : data.slice(0, 1)
 
-  const postsFromHashtags = await getPostsFromHashtags(hashtags, page);
+  await mapSeries(hashtags, async (hashtag) => {
+    const postsFromHashtag = await getPostsFromHashtag(hashtag, page);
 
-  const posts = await getPostsExtended(postsFromHashtags, page);
+    const posts = await getPostsExtended(postsFromHashtag, page);
 
-  await savePosts(posts);
+    await savePosts(posts);
+  })
 }
 
 module.exports = main;
