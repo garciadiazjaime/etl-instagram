@@ -193,8 +193,7 @@ async function savePosts(posts) {
   debug(`new: ${promises.filter((item) => item === null).length}`);
 }
 
-async function main(page) {
-  const hashtags = config.get('instagram.hashtags').split(',');
+async function main(hashtags, page) {
 
   const postsFromHashtags = await getPostsFromHashtags(hashtags, page);
 
