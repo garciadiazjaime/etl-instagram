@@ -1,4 +1,3 @@
-const fs = require('fs');
 const jsdom = require('jsdom');
 const mapSeries = require('async/mapSeries');
 const fetch = require('node-fetch');
@@ -8,12 +7,14 @@ const { Post, Location, User } = require('../models/instagram');
 const { waiter, getHTML } = require('../support/fetch');
 const config = require('../config');
 
-const postInfoFromQueryStub = require('../stubs/instagram-query-post.json')
+const postInfoFromQueryStub = require('../stubs/instagram-query-post.json');
+const { reject } = require('async');
 const isProduction = config.get('env') === 'production'
 
 const { JSDOM } = jsdom;
 
-function getRecentPosts(html, hashtag) {
+
+function getPostsFromHashtag(html, hashtag) {
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
@@ -21,9 +22,10 @@ function getRecentPosts(html, hashtag) {
       debug(`${hashtag}:onload`);
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const { edges } = graphql.hashtag.edge_hashtag_to_media
+      console.log(edges)
 
-      if (!Array.isArray(edges) || !response.edges) {
-        return null;
+      if (!Array.isArray(edges) || !edges) {
+        return reject(`${hashtag}:NO_EDGES`);
       }
     
       const response = edges.map(({ node: post }) => ({
@@ -45,10 +47,6 @@ function getRecentPosts(html, hashtag) {
 }
 
 async function getPostInfoFromQuery(post) {
-  if (!isProduction) {
-    return postInfoFromQueryStub
-  }
-
   debug(`query:${post.shortcode}`)
   const queryURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
 
@@ -125,17 +123,17 @@ async function main(page) {
 
   const posts = [];
 
-  await mapSeries(hashtags, async (hashtag) => {
+  await mapSeries(hashtags.slice(0, 1), async (hashtag) => {
     const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
-    const data = await getRecentPosts(html, hashtag);
-    debug(`${hashtag}: ${data.length}`);
+    const postsFromHashtag = await getPostsFromHashtag(html, hashtag);
+    debug(`${hashtag}: ${postsFromHashtag.length}`);
 
-    posts.push(...data);
+    posts.push(...postsFromHashtag);
 
     await waiter();
   });
 
-  await mapSeries(posts, async (item) => {
+  await mapSeries(posts.slice(0, 1), async (item) => {
     const response = await getPostInfoFromQuery(item)
 
     const postUpdated = getPostUpdated(response.data.shortcode_media)
