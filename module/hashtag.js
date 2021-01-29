@@ -134,7 +134,7 @@ async function main(page) {
 
   const posts = [];
 
-  await mapSeries(hashtags.slice(0, 1), async (hashtag) => {
+  await mapSeries(hashtags, async (hashtag) => {
     const html = await extract(hashtag, page);
     const data = await transform(html, hashtag);
     debug(`${hashtag}: ${data.length}`);
@@ -144,7 +144,7 @@ async function main(page) {
     await waiter();
   });
 
-  await mapSeries(posts.slice(0, 1), async (item) => {
+  await mapSeries(posts, async (item) => {
     const response = await getPostInfoFromQuery(item)
 
     const postUpdated = getPostUpdated(response.data.shortcode_media)
