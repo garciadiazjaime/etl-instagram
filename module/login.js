@@ -17,8 +17,7 @@ async function main() {
     debug(error);
   }
 
-  const html = await page.content();
-  debug(html)
+  await page.content();
 
   await page.waitForSelector('form', { timeout: 1000 * 3 });
 

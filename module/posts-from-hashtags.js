@@ -142,8 +142,16 @@ async function postETL(post, page) {
 
 async function getPostsExtended(posts, page) {
   const response = [];
+  let count = 0
 
   await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
+    const result = await Post.findOne({ id: post.id });
+
+    if (result) {
+      debug(`post_found:${post.id}`)
+      return null;
+    }
+
     const { user, location } = await postETL(post, page);
 
     if (!user) {
@@ -165,6 +173,10 @@ async function getPostsExtended(posts, page) {
 
     posts.push(postExtended);
 
+    count += 1
+
+    debug(`post_done:${count}/${posts.length}`)
+
     await waiter();
   });
 
@@ -184,7 +196,7 @@ async function savePosts(posts) {
 async function main(page) {
   const hashtags = config.get('instagram.hashtags').split(',');
 
-  const postsFromHashtags = await getPostsFromHashtags(hashtags.slice(0, 1), page);
+  const postsFromHashtags = await getPostsFromHashtags(hashtags, page);
 
   const posts = await getPostsExtended(postsFromHashtags, page);
 
