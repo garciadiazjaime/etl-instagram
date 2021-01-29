@@ -111,7 +111,11 @@ async function postETL(post) {
 
   const response = await fetch(postURL);
   const html = await response.text();
-  debug(html);
+
+  if (html.includes('Login • Instagram')) {
+    debug(html);
+    return {}
+  }
 
   const rawData = JSON.parse(html)
 
@@ -142,6 +146,10 @@ async function getPostsExtended(posts) {
 
   await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
     const { user, location } = await postETL(post);
+
+    if (!user) {
+      return null
+    }
 
     await User.findOneAndUpdate({ id: user.id }, user, {
       upsert: true,
