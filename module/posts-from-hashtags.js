@@ -7,24 +7,25 @@ const { Post, Location, User } = require('../models/instagram');
 const { waiter, getHTML } = require('../support/fetch');
 const config = require('../config');
 
-const isProduction = config.get('env') === 'production'
+const isProduction = config.get('env') === 'production';
 
 const { JSDOM } = jsdom;
 
 async function hashtagETL(hashtag, page) {
   const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
-      const { edges } = graphql.hashtag.edge_hashtag_to_media
+      const { edges } = graphql.hashtag.edge_hashtag_to_media;
 
       if (!Array.isArray(edges) || !edges) {
-        return reject(`${hashtag}:NO_EDGES`);
+        debug((`${hashtag}:NO_EDGES`));
+        return resolve([]);
       }
-    
+
       const response = edges.map(({ node: post }) => ({
         id: post.id,
         likeCount: post.edge_media_preview_like.count,
@@ -46,7 +47,7 @@ async function hashtagETL(hashtag, page) {
 }
 
 async function getPostsFromHashtags(hashtags, page) {
-  const response = []
+  const response = [];
 
   await mapSeries(isProduction ? hashtags : hashtags.slice(0, 1), async (hashtag) => {
     const posts = await hashtagETL(hashtag, page);
@@ -56,27 +57,28 @@ async function getPostsFromHashtags(hashtags, page) {
     await waiter();
   });
 
-  debug(`getPostsFromHashtags:${response.length}`)
+  debug(`getPostsFromHashtags:${response.length}`);
 
-  return response
+  return response;
 }
 
 async function locationETL(rawLocation) {
   const result = await Location.findOne({ id: rawLocation.id });
 
   if (result) {
+    debug(`location_found:${rawLocation.slug}`)
     return result;
   }
 
   await waiter();
 
-  debug(`location:${rawLocation.id}/${rawLocation.slug}`)
-  const locationURL = `https://www.instagram.com/explore/locations/${rawLocation.id}/${rawLocation.slug}/?__a=1`
+  debug(`location:${rawLocation.id}/${rawLocation.slug}`);
+  const locationURL = `https://www.instagram.com/explore/locations/${rawLocation.id}/${rawLocation.slug}/?__a=1`;
 
-  const response = await fetch(locationURL)
-  const json = await response.json()
+  const response = await fetch(locationURL);
+  const json = await response.json();
 
-  const { location: rawLocationExtended } = json.graphql
+  const { location: rawLocationExtended } = json.graphql;
 
   const location = {
     id: rawLocation.id,
@@ -88,7 +90,7 @@ async function locationETL(rawLocation) {
     phone: rawLocationExtended.phone,
     aliasOnFB: rawLocationExtended.primary_alias_on_fb,
     website: rawLocationExtended.website,
-    blurb: rawLocationExtended.blurb
+    blurb: rawLocationExtended.blurb,
   };
 
   if (rawLocationExtended.lat && rawLocationExtended.lng) {
@@ -100,20 +102,20 @@ async function locationETL(rawLocation) {
 
   await Location(location).save();
 
-  return location
+  return location;
 }
 
 async function postETL(post) {
-  debug(`query:${post.shortcode}`)
-  const postURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
+  debug(`query:${post.shortcode}`);
+  const postURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`;
 
-  const response = await fetch(postURL)
-  const json = await response.text()
-  debug(json)
+  const response = await fetch(postURL);
+  const html = await response.text();
+  debug(html);
 
-  const rawData = await response.json()
+  const rawData = JSON.parse(html)
 
-  const { shortcode_media: data } = rawData.data
+  const { shortcode_media: data } = rawData.data;
 
   const postExtended = {
     user: {
@@ -129,17 +131,17 @@ async function postETL(post) {
   if (data.location) {
     const location = await locationETL(data.location);
 
-    postExtended.location = location
+    postExtended.location = location;
   }
 
   return postExtended;
 }
 
 async function getPostsExtended(posts) {
-  const response = []
+  const response = [];
 
   await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
-    const { user, location } = await postETL(post)
+    const { user, location } = await postETL(post);
 
     await User.findOneAndUpdate({ id: user.id }, user, {
       upsert: true,
@@ -148,20 +150,20 @@ async function getPostsExtended(posts) {
     const postExtended = {
       ...post,
       user,
-    }
+    };
 
     if (location) {
-      postExtended.location = location
+      postExtended.location = location;
     }
 
-    posts.push(postExtended)
+    posts.push(postExtended);
 
     await waiter();
-  })
+  });
 
   debug(`getPostsExtended:${response.length}`);
 
-  return response
+  return response;
 }
 
 async function savePosts(posts) {
@@ -175,11 +177,11 @@ async function savePosts(posts) {
 async function main(page) {
   const hashtags = config.get('instagram.hashtags').split(',');
 
-  const postsFromHashtags = await getPostsFromHashtags(hashtags, page)
-  
-  const posts = await getPostsExtended(postsFromHashtags)
+  const postsFromHashtags = await getPostsFromHashtags(hashtags, page);
 
-  await savePosts(posts)  
+  const posts = await getPostsExtended(postsFromHashtags);
+
+  await savePosts(posts);
 }
 
 module.exports = main;

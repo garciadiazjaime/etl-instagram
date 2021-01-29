@@ -5,7 +5,7 @@ const cron = require('node-cron');
 const fetch = require('node-fetch');
 const debug = require('debug')('app:main');
 
-const hashtagETL = require('./module/hashtag');
+const hashtagETL = require('./module/posts-from-hashtags');
 const loginETL = require('./module/login');
 const { openDB } = require('./support/database');
 const { getPage } = require('./support/fetch');
@@ -14,7 +14,7 @@ const config = require('./config');
 const API_URL = config.get('api.url');
 const PORT = config.get('port');
 
-const isProduction = config.get('env') === 'production'
+const isProduction = config.get('env') === 'production';
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
