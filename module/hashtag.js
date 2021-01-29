@@ -63,6 +63,8 @@ async function getPostInfoFromQuery(post) {
   debug(`query:${post.shortcode}`)
 
   const response = await fetch(queryURL)
+  const html = await response.text()
+  debug(html)
 
   return response.json()
 }
@@ -147,6 +149,7 @@ async function main(page) {
     const response = await getPostInfoFromQuery(item)
 
     const postUpdated = getPostUpdated(response.data.shortcode_media)
+    debug(postUpdated)
 
     if (postUpdated.user) {
       await User.findOneAndUpdate({ id: postUpdated.user.id }, postUpdated.user, {
