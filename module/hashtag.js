@@ -38,6 +38,8 @@ async function hashtagETL(hashtag, page) {
         source: hashtag,
       }));
 
+      debug(`${hashtag}:${response.length}`);
+
       return resolve(response);
     };
   });
@@ -49,8 +51,6 @@ async function getPostsFromHashtags(hashtags, page) {
   await mapSeries(isProduction ? hashtags : hashtags.slice(0, 1), async (hashtag) => {
     const posts = await hashtagETL(hashtag, page);
 
-    debug(`${hashtag}:${posts.length}`);
-
     response.push(...posts);
 
     await waiter();
@@ -61,17 +61,19 @@ async function getPostsFromHashtags(hashtags, page) {
   return response
 }
 
-async function getLocation(rawLocation) {
+async function locationETL(rawLocation) {
   const result = await Location.findOne({ id: rawLocation.id });
 
   if (result) {
     return result;
   }
 
-  const queryURL = `https://www.instagram.com/explore/locations/${rawLocation.id}/${rawLocation.slug}/?__a=1`
-  debug(`location:${rawLocation.id}/${rawLocation.slug}`)
+  await waiter();
 
-  const response = await fetch(queryURL)
+  debug(`location:${rawLocation.id}/${rawLocation.slug}`)
+  const locationURL = `https://www.instagram.com/explore/locations/${rawLocation.id}/${rawLocation.slug}/?__a=1`
+
+  const response = await fetch(locationURL)
   const json = await response.json()
 
   const { location: rawLocationExtended } = json.graphql
@@ -103,11 +105,13 @@ async function getLocation(rawLocation) {
 
 async function postETL(post) {
   debug(`query:${post.shortcode}`)
-  const queryURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
+  const postURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`
 
-  const response = await fetch(queryURL)
+  const response = await fetch(postURL)
+  const json = await response.text()
+  debug(json)
+
   const rawData = await response.json()
-  debug(rawData)
 
   const { shortcode_media: data } = rawData.data
 
@@ -123,7 +127,7 @@ async function postETL(post) {
   };
 
   if (data.location) {
-    const location = await getLocation(data.location);
+    const location = await locationETL(data.location);
 
     postExtended.location = location
   }
@@ -176,10 +180,6 @@ async function main(page) {
   const posts = await getPostsExtended(postsFromHashtags)
 
   await savePosts(posts)  
-}
-
-if (require.main === module) {
-  main().then(() => process.exit(0)); // eslint-disable-line
 }
 
 module.exports = main;
