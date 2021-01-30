@@ -13,7 +13,7 @@ async function main() {
   try {
     await page.goto(url);
   } catch (error) {
-    debug('login:error')
+    debug('login:error');
     debug(error);
   }
 

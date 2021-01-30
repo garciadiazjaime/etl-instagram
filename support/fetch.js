@@ -44,7 +44,7 @@ async function getHTML(url, page) {
   try {
     await page.goto(url);
   } catch (error) {
-    debug('getHTML:error')
+    debug('getHTML:error');
     debug(error);
   }
 

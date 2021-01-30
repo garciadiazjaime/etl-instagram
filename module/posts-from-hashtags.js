@@ -56,7 +56,7 @@ async function locationETL(rawLocation) {
   const result = await Location.findOne({ id: rawLocation.id });
 
   if (result) {
-    debug(`location_found:${rawLocation.slug}`)
+    debug(`location_found:${rawLocation.slug}`);
     return result;
   }
 
@@ -67,8 +67,8 @@ async function locationETL(rawLocation) {
 
   const response = await fetch(locationURL);
   const html = await response.text();
-  debug(html)
-  const json = JSON.parse(html)  
+  debug(html);
+  const json = JSON.parse(html);
 
   const { location: rawLocationExtended } = json.graphql;
 
@@ -103,12 +103,10 @@ async function postETL(post, page) {
   const response = await getHTML(postURL, page);
   if (response.includes('Login • Instagram')) {
     debug('LOGIN');
-    return {}
+    return {};
   }
 
-  const rawData = await page.evaluate(() =>  {
-    return JSON.parse(document.querySelector("body").innerText); 
-  });
+  const rawData = await page.evaluate(() => JSON.parse(document.querySelector('body').innerText));
 
   const { shortcode_media: data } = rawData.data;
 
@@ -133,20 +131,20 @@ async function postETL(post, page) {
 }
 
 async function extendPostsAndSave(posts, page) {
-  let count = 0
+  let count = 0;
 
   await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
     const result = await Post.findOne({ id: post.id });
 
     if (result) {
-      debug(`post_found:${post.id}`)
+      debug(`post_found:${post.id}`);
       return null;
     }
 
     const { user, location } = await postETL(post, page);
 
     if (!user) {
-      return null
+      return null;
     }
 
     await User.findOneAndUpdate({ id: user.id }, user, {
@@ -162,30 +160,32 @@ async function extendPostsAndSave(posts, page) {
       postExtended.location = location;
     }
 
-    count += 1
+    count += 1;
 
     await Post.findOneAndUpdate({ id: postExtended.id }, postExtended, { // eslint-disable-line
       upsert: true,
-    })
+    });
 
-    debug(`post_saved:${post.shortcode}:${count}/${posts.length}`)
+    debug(`post_saved:${post.shortcode}:${count}/${posts.length}`);
 
     await waiter();
+
+    return null;
   });
 }
 
 async function main(page) {
   const data = config.get('instagram.hashtags').split(',');
-  const hashtags = isProduction ? data : data.slice(0, 1)
+  const hashtags = isProduction ? data : data.slice(0, 1);
 
   await mapSeries(hashtags, async (hashtag) => {
     const postsFromHashtag = await getPostsFromHashtag(hashtag, page);
     debug(`${hashtag}:postsFromHashtag:${postsFromHashtag.length}`);
 
     await extendPostsAndSave(postsFromHashtag, page, hashtag);
-  })
+  });
 
-  debug('============ done ============')
+  debug('============ done ============');
 }
 
 module.exports = main;
