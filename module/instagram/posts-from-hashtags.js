@@ -3,9 +3,9 @@ const mapSeries = require('async/mapSeries');
 const fetch = require('node-fetch');
 const debug = require('debug')('app:hastag');
 
-const { Post, Location, User } = require('../models/instagram');
-const { waiter, getHTML } = require('../support/fetch');
-const config = require('../config');
+const { Post, Location, User } = require('./models');
+const { waiter, getHTML } = require('../../support/fetch');
+const config = require('../../config');
 
 const isProduction = config.get('env') === 'production';
 
@@ -67,7 +67,7 @@ async function locationETL(rawLocation) {
 
   const response = await fetch(locationURL);
   const html = await response.text();
-  debug(html);
+
   const json = JSON.parse(html);
 
   const { location: rawLocationExtended } = json.graphql;

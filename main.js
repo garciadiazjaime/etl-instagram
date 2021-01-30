@@ -5,8 +5,8 @@ const cron = require('node-cron');
 const fetch = require('node-fetch');
 const debug = require('debug')('app:main');
 
-const hashtagETL = require('./module/posts-from-hashtags');
-const loginETL = require('./module/login');
+const hashtagETL = require('./module/instagram/posts-from-hashtags');
+const loginETL = require('./module/instagram/login');
 const { openDB } = require('./support/database');
 const { getPage } = require('./support/fetch');
 const config = require('./config');
@@ -32,11 +32,11 @@ function setupCron(page) {
     await hashtagETL(page);
   });
 
-  cron.schedule('*/20 * * * *', async () => {
+  cron.schedule('*/10 * * * *', async () => {
     await fetch(API_URL);
   });
 
-  return null;
+  return debug('CRON_SETUP');
 }
 
 app.listen(PORT, async () => {
