@@ -66,7 +66,9 @@ async function locationETL(rawLocation) {
   const locationURL = `https://www.instagram.com/explore/locations/${rawLocation.id}/${rawLocation.slug}/?__a=1`;
 
   const response = await fetch(locationURL);
-  const json = await response.json();
+  const html = await response.text();
+  debug(html)
+  const json = JSON.parse(html)  
 
   const { location: rawLocationExtended } = json.graphql;
 
@@ -130,8 +132,7 @@ async function postETL(post, page) {
   return postExtended;
 }
 
-async function getPostsExtended(posts, page) {
-  const response = [];
+async function extendPostsAndSave(posts, page) {
   let count = 0
 
   await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
@@ -161,16 +162,16 @@ async function getPostsExtended(posts, page) {
       postExtended.location = location;
     }
 
-    response.push(postExtended);
-
     count += 1
 
-    debug(`post_done:${post.shortcode}:${count}/${posts.length}`)
+    await Post.findOneAndUpdate({ id: postExtended.id }, postExtended, { // eslint-disable-line
+      upsert: true,
+    })
+
+    debug(`post_saved:${post.shortcode}:${count}/${posts.length}`)
 
     await waiter();
   });
-
-  return response;
 }
 
 async function main(page) {
@@ -181,14 +182,10 @@ async function main(page) {
     const postsFromHashtag = await getPostsFromHashtag(hashtag, page);
     debug(`${hashtag}:postsFromHashtag:${postsFromHashtag.length}`);
 
-    const posts = await getPostsExtended(postsFromHashtag, page, hashtag);
-    debug(`${hashtag}:getPostsExtended:${posts.length}`);
-
-    const promises = await mapSeries(posts, async (data) => Post.findOneAndUpdate({ id: data.id }, data, { // eslint-disable-line
-      upsert: true,
-    }));
-    debug(`${hashtag}:new:${promises.filter((item) => item === null).length}`);
+    await extendPostsAndSave(postsFromHashtag, page, hashtag);
   })
+
+  debug('============ done ============')
 }
 
 module.exports = main;
