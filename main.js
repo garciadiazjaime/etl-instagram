@@ -50,11 +50,10 @@ app.listen(PORT, async () => {
   await openDB();
   debug('DB opened');
 
-  // const cookies = isProduction ? await loginETL() : null;
-  // const page = await getPage(cookies);
-  // await hashtagETL(page);
+  const cookies = isProduction ? await loginETL() : null;
+  const page = await getPage(cookies);
 
-  await elimparcial()
+  await elimparcial();
 
   setupCron(page);
 });
