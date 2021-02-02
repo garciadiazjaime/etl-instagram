@@ -6,6 +6,7 @@ const fetch = require('node-fetch');
 const debug = require('debug')('app:main');
 
 const hashtagETL = require('./module/instagram/posts-from-hashtags');
+const elimparcial = require('./module/news/elimparcial');
 const loginETL = require('./module/instagram/login');
 const { openDB } = require('./support/database');
 const { getPage } = require('./support/fetch');
@@ -28,11 +29,15 @@ function setupCron(page) {
     return debug('CRON_NOT_SETUP');
   }
 
-  cron.schedule('42 */4 * * *', async () => {
+  cron.schedule('42 */2 * * *', async () => {
     await hashtagETL(page);
   });
 
-  cron.schedule('*/10 * * * *', async () => {
+  cron.schedule('42 */4 * * *', async () => {
+    await elimparcial();
+  });
+
+  cron.schedule('*/20 * * * *', async () => {
     await fetch(API_URL);
   });
 
@@ -45,11 +50,11 @@ app.listen(PORT, async () => {
   await openDB();
   debug('DB opened');
 
-  const cookies = isProduction ? await loginETL() : null;
+  // const cookies = isProduction ? await loginETL() : null;
+  // const page = await getPage(cookies);
+  // await hashtagETL(page);
 
-  const page = await getPage(cookies);
-
-  await hashtagETL(page);
+  await elimparcial()
 
   setupCron(page);
 });
