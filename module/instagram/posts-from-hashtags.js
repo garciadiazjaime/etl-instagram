@@ -67,6 +67,7 @@ async function locationETL(rawLocation) {
 
   const response = await fetch(locationURL);
   const html = await response.text();
+  debug(html)
 
   const json = JSON.parse(html);
 
