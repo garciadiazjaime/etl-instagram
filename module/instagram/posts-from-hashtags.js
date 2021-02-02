@@ -67,9 +67,14 @@ async function locationETL(rawLocation) {
 
   const response = await fetch(locationURL);
   const html = await response.text();
-  debug(html)
+  let json = null
 
-  const json = JSON.parse(html);
+  try {
+    json = JSON.parse(html);
+  } catch(error) {
+    debug(html)
+    throw error
+  }
 
   const { location: rawLocationExtended } = json.graphql;
 
