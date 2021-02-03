@@ -35,6 +35,7 @@ async function getNewsFromHomePage() {
     const button = article.window.document.querySelector('button');
 
     news.push({
+      description: [],
       image: getImageURL(button.dataset.image, url),
       source: 'elimparcial',
       title: button.dataset.title,
