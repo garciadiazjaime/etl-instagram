@@ -52,7 +52,7 @@ async function getPostsFromHashtag(hashtag, page) {
   return posts;
 }
 
-async function locationETL(rawLocation) {
+async function locationETL(rawLocation, page) {
   const result = await Location.findOne({ id: rawLocation.id });
 
   if (result) {
@@ -62,21 +62,17 @@ async function locationETL(rawLocation) {
 
   await waiter();
 
-  debug(`location:${rawLocation.id}/${rawLocation.slug}`);
   const locationURL = `https://www.instagram.com/explore/locations/${rawLocation.id}/${rawLocation.slug}/?__a=1`;
 
-  const response = await fetch(locationURL);
-  const html = await response.text();
-  let json = null;
-
-  try {
-    json = JSON.parse(html);
-  } catch (error) {
-    debug(html);
-    throw error;
+  const response = await getHTML(locationURL, page);
+  if (response.includes('Login • Instagram')) {
+    debug('LOGIN');
+    return null;
   }
 
-  const { location: rawLocationExtended } = json.graphql;
+  const rawData = await page.evaluate(() => JSON.parse(document.querySelector('body').innerText));
+
+  const { location: rawLocationExtended } = rawData.graphql;
 
   const location = {
     id: rawLocation.id,
@@ -104,7 +100,6 @@ async function locationETL(rawLocation) {
 }
 
 async function postETL(post, page) {
-  debug(`query:${post.shortcode}`);
   const postURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`;
   const response = await getHTML(postURL, page);
   if (response.includes('Login • Instagram')) {
@@ -128,7 +123,8 @@ async function postETL(post, page) {
   };
 
   if (data.location) {
-    const location = await locationETL(data.location);
+    const location = await locationETL(data.location, page);
+
 
     postExtended.location = location;
   }
@@ -139,7 +135,7 @@ async function postETL(post, page) {
 async function extendPostsAndSave(posts, page) {
   let count = 0;
 
-  await mapSeries(isProduction ? posts : posts.slice(0, 1), async (post) => {
+  await mapSeries(posts, async (post) => {
     const result = await Post.findOne({ id: post.id });
 
     if (result) {
@@ -150,6 +146,7 @@ async function extendPostsAndSave(posts, page) {
     const { user, location } = await postETL(post, page);
 
     if (!user) {
+      debug(`user_not_found:${post.permalink}`);
       return null;
     }
 
@@ -164,6 +161,10 @@ async function extendPostsAndSave(posts, page) {
 
     if (location) {
       postExtended.location = location;
+    }
+
+    if (!isProduction) {
+      debug(postExtended)
     }
 
     count += 1;
@@ -188,7 +189,8 @@ async function main(page) {
     const postsFromHashtag = await getPostsFromHashtag(hashtag, page);
     debug(`${hashtag}:postsFromHashtag:${postsFromHashtag.length}`);
 
-    await extendPostsAndSave(postsFromHashtag, page, hashtag);
+    const posts = isProduction ? postsFromHashtag : postsFromHashtag.slice(0, 1)
+    await extendPostsAndSave(posts, page, hashtag);
   });
 
   debug('============ done ============');
