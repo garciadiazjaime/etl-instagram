@@ -14,7 +14,7 @@ const { JSDOM } = jsdom;
 async function hashtagETL(hashtag, page) {
   const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
 
-  debug(html)
+  debug(html.slice(0, 1000))
 
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
