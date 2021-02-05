@@ -4,21 +4,25 @@ const { getPage } = require('../../support/fetch');
 const config = require('../../config');
 
 async function main() {
-  const url = 'https://www.instagram.com/accounts/login/';
+  let url = 'https://www.instagram.com/accounts/login/';
 
   const page = await getPage();
 
   debug(url);
 
-  try {
-    await page.goto(url);
-  } catch (error) {
-    debug('login:error');
-    debug(error);
-  }
+  await page.goto(url);
 
-  const html = await page.content();
+  let html = await page.content();
   debug(html.slice(0, 1000))
+
+  if (html.includes('Page Not Found • Instagram')) {
+    url = 'https://www.instagram.com/'
+    debug(url);
+    await page.goto(url);
+
+    const html = await page.content();
+    debug(html.slice(0, 1000))
+  }
 
   await page.waitForSelector('form', { timeout: 1000 * 3 });
 
