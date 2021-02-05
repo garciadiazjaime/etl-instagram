@@ -14,22 +14,12 @@ const { JSDOM } = jsdom;
 async function hashtagETL(hashtag, page) {
   const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
 
-  return new Promise((resolve) => {
-    let dom
-    try {
-      dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
-    } catch(error) {
-      debug(`${hashtag}:error`)
-      debug(error);
-      debug(html)
-    }
+  debug(html)
 
-    if (!dom) {
-      return resolve([]);
-    }
+  return new Promise((resolve) => {
+    const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      debug(`${hashtag}:onload${!!html}`)
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const { edges } = graphql.hashtag.edge_hashtag_to_media;
 
