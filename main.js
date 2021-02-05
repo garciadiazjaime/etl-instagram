@@ -52,9 +52,9 @@ app.listen(PORT, async () => {
 
   const cookies = isProduction ? await loginETL() : null;
   const page = await getPage(cookies);
-  await hashtagETL(page);
+  // await hashtagETL(page);
 
-  // await elimparcial();
+  await elimparcial();
 
   setupCron(page);
 });
