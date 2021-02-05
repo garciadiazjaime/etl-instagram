@@ -47,7 +47,7 @@ async function getNewsFromHomePage() {
 }
 
 function getContentFromSelectors(dom, selectors) {
-  if (!selectors) {
+  if (!selectors.length) {
     return [];
   }
 
@@ -74,6 +74,12 @@ async function singleNewsETL(item) {
 
   const title = dom.window.document.querySelector('h1');
   const image = getContentFromSelectors(dom, ['.newsphotogallery__image img', '.ampstart-image-fullpage-hero amp-img']);
+
+  if (!image) {
+    debug(`no_image:${item.url}`);
+    return item
+  }
+
   const paragraphs = getContentFromSelectors(dom, ['.newsfull__body p', '.land-see-body-content p']);
 
   const description = [];
