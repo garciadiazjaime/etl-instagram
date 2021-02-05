@@ -15,9 +15,21 @@ async function hashtagETL(hashtag, page) {
   const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
 
   return new Promise((resolve) => {
-    const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
+    let dom
+    try {
+      dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
+    } catch(error) {
+      debug(`${hashtag}:error`)
+      debug(error);
+      debug(html)
+    }
+
+    if (!dom) {
+      return resolve([]);
+    }
 
     dom.window.onload = () => {
+      debug(`${hashtag}:onload${!!html}`)
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const { edges } = graphql.hashtag.edge_hashtag_to_media;
 
@@ -42,14 +54,6 @@ async function hashtagETL(hashtag, page) {
       return resolve(response);
     };
   });
-}
-
-async function getPostsFromHashtag(hashtag, page) {
-  const posts = await hashtagETL(hashtag, page);
-
-  await waiter();
-
-  return posts;
 }
 
 async function locationETL(rawLocation, page) {
@@ -132,21 +136,21 @@ async function postETL(post, page) {
   return postExtended;
 }
 
-async function extendPostsAndSave(posts, page) {
+async function extendPostsAndSave(posts, page, hashtag) {
   let count = 0;
 
   await mapSeries(posts, async (post) => {
     const result = await Post.findOne({ id: post.id });
 
     if (result) {
-      debug(`post_found:${post.id}`);
+      debug(`${hashtag}:post_found:${post.id}`);
       return null;
     }
 
     const { user, location } = await postETL(post, page);
 
     if (!user) {
-      debug(`user_not_found:${post.permalink}`);
+      debug(`${hashtag}:user_not_found:${post.permalink}`);
       return null;
     }
 
@@ -173,7 +177,7 @@ async function extendPostsAndSave(posts, page) {
       upsert: true,
     });
 
-    debug(`post_saved:${post.shortcode}:${count}/${posts.length}`);
+    debug(`${hashtag}:post_saved:${post.shortcode}:${count}/${posts.length}`);
 
     await waiter();
 
@@ -186,7 +190,9 @@ async function main(page) {
   const hashtags = isProduction ? data : data.slice(0, 1);
 
   await mapSeries(hashtags, async (hashtag) => {
-    const postsFromHashtag = await getPostsFromHashtag(hashtag, page);
+    const postsFromHashtag = await hashtagETL(hashtag, page);
+    await waiter();
+
     debug(`${hashtag}:postsFromHashtag:${postsFromHashtag.length}`);
 
     const posts = isProduction ? postsFromHashtag : postsFromHashtag.slice(0, 1)
