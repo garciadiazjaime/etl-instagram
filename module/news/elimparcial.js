@@ -75,8 +75,9 @@ async function singleNewsETL(item) {
   const title = dom.window.document.querySelector('h1');
   const image = getContentFromSelectors(dom, ['.newsphotogallery__image img', '.ampstart-image-fullpage-hero amp-img']);
 
-  if (!image) {
+  if (!image.length) {
     debug(`no_image:${item.url}`);
+    debug(item)
     return item
   }
 
