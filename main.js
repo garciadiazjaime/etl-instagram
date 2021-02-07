@@ -7,6 +7,7 @@ const debug = require('debug')('app:main');
 
 const hashtagETL = require('./module/instagram/posts-from-hashtags');
 const elimparcial = require('./module/news/elimparcial');
+const eldolar = require('./module/dolar/eldolar');
 const loginETL = require('./module/instagram/login');
 const { openDB } = require('./support/database');
 const { getPage } = require('./support/fetch');
@@ -31,6 +32,8 @@ function setupCron(page) {
 
   cron.schedule('42 */2 * * *', async () => {
     await hashtagETL(page);
+
+    await eldolar()
   });
 
   cron.schedule('42 */4 * * *', async () => {
@@ -54,7 +57,9 @@ app.listen(PORT, async () => {
   const page = await getPage(cookies);
   // await hashtagETL(page);
 
-  await elimparcial();
+  // await elimparcial();
+
+  await eldolar()
 
   setupCron(page);
 });
