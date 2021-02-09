@@ -59,7 +59,7 @@ app.listen(PORT, async () => {
 
   // await elimparcial();
 
-  await eldolar()
+  // await eldolar()
 
   setupCron(page);
 });
