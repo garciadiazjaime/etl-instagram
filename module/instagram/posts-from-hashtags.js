@@ -5,6 +5,7 @@ const debug = require('debug')('app:hastag');
 
 const { Post, Location, User } = require('./models');
 const { waiter, getHTML } = require('../../support/fetch');
+const { openDB } = require('../../support/database');
 const config = require('../../config');
 
 const isProduction = config.get('env') === 'production';
@@ -25,8 +26,6 @@ async function hashtagETL(hashtag, page) {
       if (!Array.isArray(edges) || !edges) {
         debug((`${hashtag}:NO_EDGES`));
         return resolve([]);
-      } else {
-        debug('EDGES')
       }
 
       const response = edges.map(({ node: post }) => ({
@@ -35,14 +34,14 @@ async function hashtagETL(hashtag, page) {
         commentsCount: post.edge_media_to_comment.count,
         permalink: `https://www.instagram.com/p/${post.shortcode}/`,
         shortcode: post.shortcode,
-        caption: post.edge_media_to_caption.edges[0].node.text,
+        caption: post.edge_media_to_caption.edges[0] && post.edge_media_to_caption.edges[0].node.text,
         mediaUrl: post.thumbnail_src,
         accessibility: post.accessibility_caption,
         mediaType: post.__typename, // eslint-disable-line no-underscore-dangle
         source: hashtag,
       }));
 
-      debug(`post: ${response.id}`)
+      debug(`post: ${response.length}`)
 
       return resolve(response);
     };
