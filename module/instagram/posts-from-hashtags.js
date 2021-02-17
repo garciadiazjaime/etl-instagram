@@ -19,13 +19,14 @@ async function hashtagETL(hashtag, page) {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
-      debug(`_sharedData: ${!!dom.window._sharedData}`)
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       const { edges } = graphql.hashtag.edge_hashtag_to_media;
 
       if (!Array.isArray(edges) || !edges) {
         debug((`${hashtag}:NO_EDGES`));
         return resolve([]);
+      } else {
+        debug('EDGES')
       }
 
       const response = edges.map(({ node: post }) => ({
@@ -40,6 +41,8 @@ async function hashtagETL(hashtag, page) {
         mediaType: post.__typename, // eslint-disable-line no-underscore-dangle
         source: hashtag,
       }));
+
+      debug(`post: ${response.id}`)
 
       return resolve(response);
     };
