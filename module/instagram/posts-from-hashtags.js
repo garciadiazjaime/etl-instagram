@@ -14,6 +14,10 @@ const { JSDOM } = jsdom;
 
 async function hashtagETL(hashtag, page) {
   const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
+  if (!html) {
+    return []
+  }
+
   debug(html.slice(0, 1000))
 
   return new Promise((resolve) => {
@@ -61,6 +65,11 @@ async function locationETL(rawLocation, page) {
   const locationURL = `https://www.instagram.com/explore/locations/${rawLocation.id}/${rawLocation.slug}/?__a=1`;
 
   const response = await getHTML(locationURL, page);
+  if (!response) {
+    debug('URL_ERROR');
+    return null;
+  }
+
   if (response.includes('Login • Instagram')) {
     debug('LOGIN');
     return null;
@@ -98,6 +107,11 @@ async function locationETL(rawLocation, page) {
 async function postETL(post, page) {
   const postURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`;
   const response = await getHTML(postURL, page);
+  if (!response) {
+    debug('URL_ERROR')
+    return {}
+  }
+
   if (response.includes('Login • Instagram')) {
     debug('LOGIN');
     return {};
@@ -121,8 +135,9 @@ async function postETL(post, page) {
   if (data.location) {
     const location = await locationETL(data.location, page);
 
-
-    postExtended.location = location;
+    if (location) {
+      postExtended.location = location;
+    }
   }
 
   return postExtended;
