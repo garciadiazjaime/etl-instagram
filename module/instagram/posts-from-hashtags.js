@@ -143,6 +143,12 @@ async function postETL(post, page) {
   return postExtended;
 }
 
+const blockedUsers = ['dentaldrcoronado']
+
+function isUserBlocked(username) {
+  return blockedUsers.includes[username]
+}
+
 async function extendPostsAndSave(posts, page, hashtag) {
   let count = 0;
 
@@ -158,6 +164,11 @@ async function extendPostsAndSave(posts, page, hashtag) {
 
     if (!user) {
       debug(`${hashtag}:user_not_found:${post.permalink}`);
+      return null;
+    }
+
+    if (isUserBlocked(user.username)) {
+      debug(`${hashtag}:user_not_allowed:${user.username}`);
       return null;
     }
 
