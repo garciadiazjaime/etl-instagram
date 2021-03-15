@@ -1,3 +1,4 @@
+const fs = require('fs')
 const debug = require('debug')('app:login');
 
 const { getPage } = require('../../support/fetch');
@@ -15,6 +16,13 @@ async function main() {
   let html = await page.content();
   debug(html.slice(0, 1000))
 
+  const path = './public';
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path);
+  }
+
+  await page.screenshot({ path: `${path}/login_first.png` });
+
   if (html.includes('Page Not Found • Instagram')) {
     url = 'https://www.instagram.com/'
     debug(url);
@@ -22,6 +30,8 @@ async function main() {
 
     const html = await page.content();
     debug(html.slice(0, 1000))
+
+    await page.screenshot({ path: `${path}/login_second.png` });
   }
 
   await page.waitForSelector('form', { timeout: 1000 * 3 });

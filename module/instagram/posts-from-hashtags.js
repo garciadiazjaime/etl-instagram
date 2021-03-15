@@ -1,11 +1,10 @@
 const jsdom = require('jsdom');
 const mapSeries = require('async/mapSeries');
-const fetch = require('node-fetch');
 const debug = require('debug')('app:hastag');
 
 const { Post, Location, User } = require('./models');
 const { waiter, getHTML } = require('../../support/fetch');
-const { openDB } = require('../../support/database');
+const { sendEmail } = require('../../support/email')
 const config = require('../../config');
 
 const isProduction = config.get('env') === 'production';
@@ -15,10 +14,16 @@ const { JSDOM } = jsdom;
 async function hashtagETL(hashtag, page) {
   const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
   if (!html) {
+    debug('NO_HTML')
     return []
   }
 
   debug(html.slice(0, 1000))
+
+  if (html.includes('Login • Instagram') || html.includes('Page Not Found • Instagram')) {
+    await sendEmail('LOGIN_REQUIRED')
+    return []
+  }
 
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });

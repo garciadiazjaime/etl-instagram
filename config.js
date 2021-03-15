@@ -43,6 +43,11 @@ const config = convict({
       env: 'INSTAGRAM_HASHTAGS',
     },
   },
+  sendgrid: {
+    doc: 'Email app',
+    default: '',
+    env: 'SENDGRID_API_KEY',
+  },
 });
 
 // Perform validation
