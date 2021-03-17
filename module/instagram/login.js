@@ -1,7 +1,7 @@
-const fs = require('fs')
 const debug = require('debug')('app:login');
 
 const { getPage } = require('../../support/fetch');
+const { getPublicPath } = require('../../support/file')
 const config = require('../../config');
 
 async function main() {
@@ -16,11 +16,6 @@ async function main() {
   let html = await page.content();
   debug(html.slice(0, 1000))
 
-  const path = './public';
-  if (!fs.existsSync(path)) {
-    fs.mkdirSync(path);
-  }
-
   if (html.includes('Page Not Found • Instagram')) {
     url = 'https://www.instagram.com/'
     debug(url);
@@ -28,8 +23,6 @@ async function main() {
 
     const html = await page.content();
     debug(html.slice(0, 1000))
-
-    await page.screenshot({ path: `${path}/login_second.png` });
   }
 
   await page.waitForSelector('form', { timeout: 1000 * 3 });
@@ -39,9 +32,11 @@ async function main() {
 
   await page.click('button[type="submit"]');
 
-  await page.screenshot({ path: `${path}/login.png` });
+  await page.screenshot({ path: `${getPublicPath()}/login-before.png` });
 
   await page.waitForNavigation();
+
+  await page.screenshot({ path: `${getPublicPath()}/login-after.png` });
 
   const cookies = await page.cookies();
   debug(`cookies:${!!cookies}`);

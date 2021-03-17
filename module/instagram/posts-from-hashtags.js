@@ -5,6 +5,7 @@ const debug = require('debug')('app:hastag');
 const { Post, Location, User } = require('./models');
 const { waiter, getHTML } = require('../../support/fetch');
 const { sendEmail } = require('../../support/email')
+const { getPublicPath } = require('../../support/file')
 const config = require('../../config');
 
 const isProduction = config.get('env') === 'production';
@@ -21,7 +22,7 @@ async function hashtagETL(hashtag, page) {
   debug(html.slice(0, 1000))
 
   if (html.includes('Login • Instagram') || html.includes('Page Not Found • Instagram')) {
-    await page.screenshot({ path: `hashtag-login.png` });
+    await page.screenshot({ path: `${getPublicPath()}/hashtag-login.png` });]
     await sendEmail('LOGIN_REQUIRED')
     return []
   }
