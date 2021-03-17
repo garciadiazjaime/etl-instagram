@@ -22,7 +22,7 @@ async function hashtagETL(hashtag, page) {
   debug(html.slice(0, 1000))
 
   if (html.includes('Login • Instagram') || html.includes('Page Not Found • Instagram')) {
-    await page.screenshot({ path: `${getPublicPath()}/hashtag-login.png` });]
+    await page.screenshot({ path: `${getPublicPath()}/hashtag-login.png` });
     await sendEmail('LOGIN_REQUIRED')
     return []
   }
