@@ -22,6 +22,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(morgan('combined'));
+app.use(express.static('public'))
 
 app.get('/', (req, res) => res.json({ msg: ':)' }));
 
@@ -55,7 +56,7 @@ app.listen(PORT, async () => {
 
   const cookies = isProduction ? await loginETL() : null;
   const page = await getPage(cookies);
-  // await hashtagETL(page);
+  await hashtagETL(page);
 
   // await elimparcial();
 

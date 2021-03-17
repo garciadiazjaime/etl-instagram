@@ -22,6 +22,7 @@ async function main() {
   }
 
   await page.screenshot({ path: `${path}/login_first.png` });
+  debug(`print_saved:${fs.existsSync(`${path}/login_first.png`)}`)
 
   if (html.includes('Page Not Found • Instagram')) {
     url = 'https://www.instagram.com/'
