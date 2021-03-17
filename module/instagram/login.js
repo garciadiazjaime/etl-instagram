@@ -21,9 +21,6 @@ async function main() {
     fs.mkdirSync(path);
   }
 
-  await page.screenshot({ path: `${path}/login_first.png` });
-  debug(`print_saved:${fs.existsSync(`${path}/login_first.png`)}`)
-
   if (html.includes('Page Not Found • Instagram')) {
     url = 'https://www.instagram.com/'
     debug(url);
@@ -41,6 +38,8 @@ async function main() {
   await page.type('input[name="password"]', config.get('instagram.password'));
 
   await page.click('button[type="submit"]');
+
+  await page.screenshot({ path: `${path}/login.png` });
 
   await page.waitForNavigation();
 
