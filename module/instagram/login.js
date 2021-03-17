@@ -2,6 +2,7 @@ const debug = require('debug')('app:login');
 
 const { getPage } = require('../../support/fetch');
 const { getPublicPath } = require('../../support/file')
+const { sendEmail } = require('../../support/email')
 const config = require('../../config');
 
 async function main() {
@@ -37,6 +38,11 @@ async function main() {
   await page.waitForNavigation();
 
   await page.screenshot({ path: `${getPublicPath()}/login-after.png` });
+
+  if (html.includes('Suspicious Login Attempt')) {
+    await sendEmail('SUSPICIOUS_ATTEMPT')
+    return null
+  }
 
   const cookies = await page.cookies();
   debug(`cookies:${!!cookies}`);

@@ -54,7 +54,11 @@ app.listen(PORT, async () => {
   await openDB();
   debug('DB opened');
 
-  const cookies = isProduction ? await loginETL() : null;
+  const cookies = isProduction ? await loginETL() : {};
+  if (!cookies) {
+    return debug('NO_COOKIES');
+  }
+
   const page = await getPage(cookies);
   await hashtagETL(page);
 
