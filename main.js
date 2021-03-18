@@ -60,7 +60,7 @@ app.listen(PORT, async () => {
   }
 
   const page = await getPage(cookies);
-  await hashtagETL(page);
+  // await hashtagETL(page);
 
   // await elimparcial();
 
