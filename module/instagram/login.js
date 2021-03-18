@@ -22,7 +22,7 @@ async function main() {
     debug(url);
     await page.goto(url);
 
-    const html = await page.content();
+    html = await page.content();
     debug(html.slice(0, 1000))
   }
 
@@ -38,6 +38,8 @@ async function main() {
   await page.waitForNavigation();
 
   await page.screenshot({ path: `${getPublicPath()}/login-after.png` });
+  html = await page.content();
+  debug(html.slice(0, 1000))
 
   if (html.includes('Suspicious Login Attempt')) {
     await sendEmail('SUSPICIOUS_ATTEMPT')
