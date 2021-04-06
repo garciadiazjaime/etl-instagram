@@ -27,11 +27,14 @@ async function hashtagETL(hashtag, page) {
     return []
   }
 
+  await page.screenshot({ path: `${getPublicPath()}/${hashtag}.png` });
+
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
+
       const { edges } = graphql.hashtag.edge_hashtag_to_media;
 
       if (!Array.isArray(edges) || !edges) {
