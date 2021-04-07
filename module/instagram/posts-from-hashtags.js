@@ -33,6 +33,7 @@ async function hashtagETL(hashtag, page) {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
+      debug(dom.window._sharedData.entry_data.TagPage[0])
       const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
 
       const { edges } = graphql.hashtag.edge_hashtag_to_media;
