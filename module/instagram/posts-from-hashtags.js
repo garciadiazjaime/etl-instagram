@@ -33,8 +33,6 @@ function getPostsFromData({ recent }, hashtag) {
 
   const items = recent.sections.reduce((accu, item) => {
     item.layout_content.medias.forEach(({ media }) => {
-      debug('media')
-      debug(JSON.stringify(media))
       accu.push({
         id: media.id,
         likeCount: media.like_count,
@@ -95,7 +93,6 @@ async function hashtagETL(hashtag, page) {
 
     dom.window.onload = () => {
       const { graphql, data } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
-      debug(dom.window._sharedData.entry_data.TagPage[0])
 
       if (!graphql) {
         debug('NO_GRAPHQL')
