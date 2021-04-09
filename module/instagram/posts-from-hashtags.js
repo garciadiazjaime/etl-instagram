@@ -13,11 +13,12 @@ const isProduction = config.get('env') === 'production';
 const { JSDOM } = jsdom;
 
 function getImage(media) {
+  debug(media)
   if (media.image_versions2 && Array.isArray(media.image_versions2.candidates) && media.image_versions2.candidates.length) {
     return media.image_versions2.candidates[0].url
   }
 
-  if (Array.isArray(media.carousel_media) && Array.isArray(media.carousel_media[0].image_versions2.candidates)) {
+  if (media.carousel_media && Array.isArray(media.carousel_media) && Array.isArray(media.carousel_media[0].image_versions2.candidates)) {
     return media.carousel_media[0].image_versions2.candidates[0].url
   }
 
@@ -26,12 +27,15 @@ function getImage(media) {
 
 
 function getPostsFromData({ recent }) {
+  debug(recent)
   if (!Array.isArray(recent.sections) || !recent.sections.length) {
     return null
   }
 
   const items = recent.sections.reduce((accu, item) => {
+    debug(item)
     item.layout_content.medias.forEach(({ media }) => {
+      debug(media)
       accu.push({
         id: media.id,
         likeCount: media.like_count,
@@ -98,7 +102,7 @@ async function hashtagETL(hashtag, page) {
         debug('NO_GRAPHQL')
       }
 
-      const response = graphql && graphql.hashtag ? getPostsFromGraphql(graphql, hashtag) : getPostsFromData(data, hashtag)
+      const response = graphql ? getPostsFromGraphql(graphql, hashtag) : getPostsFromData(data, hashtag)
 
       debug(`posts: ${response.length}`)
 
