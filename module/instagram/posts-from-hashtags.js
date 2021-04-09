@@ -26,16 +26,15 @@ function getImage(media) {
 }
 
 
-function getPostsFromData({ recent }) {
-  debug(recent)
+function getPostsFromData({ recent }, hashtag) {
   if (!Array.isArray(recent.sections) || !recent.sections.length) {
     return null
   }
 
   const items = recent.sections.reduce((accu, item) => {
-    debug(item)
     item.layout_content.medias.forEach(({ media }) => {
-      debug(media)
+      debug('media')
+      debug(JSON.stringify(media))
       accu.push({
         id: media.id,
         likeCount: media.like_count,
