@@ -12,6 +12,66 @@ const isProduction = config.get('env') === 'production';
 
 const { JSDOM } = jsdom;
 
+function getImage(media) {
+  if (media.image_versions2 && Array.isArray(media.image_versions2.candidates) && media.image_versions2.candidates.length) {
+    return media.image_versions2.candidates[0].url
+  }
+
+  if (Array.isArray(media.carousel_media) && Array.isArray(media.carousel_media[0].image_versions2.candidates)) {
+    return media.carousel_media[0].image_versions2.candidates[0].url
+  }
+
+  return null
+}
+
+
+function getPostsFromData({ recent }) {
+  if (!Array.isArray(recent.sections) || !recent.sections.length) {
+    return null
+  }
+
+  const items = recent.sections.reduce((accu, item) => {
+    item.layout_content.medias.forEach(({ media }) => {
+      accu.push({
+        id: media.id,
+        likeCount: media.like_count,
+        commentsCount: media.comment_count,
+        permalink: `https://www.instagram.com/p/${media.code}/`,
+        shortcode: media.code,
+        caption: media.caption ? media.caption.text : '',
+        mediaUrl: getImage(media),
+        source: hashtag,
+      })
+    })
+
+    return accu
+  }, [])
+
+  return items
+}
+
+function getPostsFromGraphql(graphql, hashtag) {
+  const { edges } = graphql.hashtag.edge_hashtag_to_media;
+
+  if (!Array.isArray(edges) || !edges) {
+    debug((`${hashtag}:NO_EDGES`));
+    return resolve([]);
+  }
+
+  return edges.map(({ node: post }) => ({
+    id: post.id,
+    likeCount: post.edge_media_preview_like.count,
+    commentsCount: post.edge_media_to_comment.count,
+    permalink: `https://www.instagram.com/p/${post.shortcode}/`,
+    shortcode: post.shortcode,
+    caption: post.edge_media_to_caption.edges[0] && post.edge_media_to_caption.edges[0].node.text,
+    mediaUrl: post.thumbnail_src,
+    accessibility: post.accessibility_caption,
+    mediaType: post.__typename, // eslint-disable-line no-underscore-dangle
+    source: hashtag,
+  }))
+}
+
 async function hashtagETL(hashtag, page) {
   const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
   if (!html) {
@@ -27,36 +87,20 @@ async function hashtagETL(hashtag, page) {
     return []
   }
 
-  await page.screenshot({ path: `${getPublicPath()}/${hashtag}.png` });
-
   return new Promise((resolve) => {
     const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
 
     dom.window.onload = () => {
+      const { graphql, data } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
       debug(dom.window._sharedData.entry_data.TagPage[0])
-      const { graphql } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
 
-      const { edges } = graphql.hashtag.edge_hashtag_to_media;
-
-      if (!Array.isArray(edges) || !edges) {
-        debug((`${hashtag}:NO_EDGES`));
-        return resolve([]);
+      if (!graphql) {
+        debug('NO_GRAPHQL')
       }
 
-      const response = edges.map(({ node: post }) => ({
-        id: post.id,
-        likeCount: post.edge_media_preview_like.count,
-        commentsCount: post.edge_media_to_comment.count,
-        permalink: `https://www.instagram.com/p/${post.shortcode}/`,
-        shortcode: post.shortcode,
-        caption: post.edge_media_to_caption.edges[0] && post.edge_media_to_caption.edges[0].node.text,
-        mediaUrl: post.thumbnail_src,
-        accessibility: post.accessibility_caption,
-        mediaType: post.__typename, // eslint-disable-line no-underscore-dangle
-        source: hashtag,
-      }));
+      const response = graphql && graphql.hashtag ? getPostsFromGraphql(graphql, hashtag) : getPostsFromData(data, hashtag)
 
-      debug(`post: ${response.length}`)
+      debug(`posts: ${response.length}`)
 
       return resolve(response);
     };
