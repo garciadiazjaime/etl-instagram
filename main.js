@@ -60,11 +60,12 @@ app.listen(PORT, async () => {
   }
 
   const page = await getPage(cookies);
+
+  setupCron(page);
+
   await hashtagETL(page);
 
   // await elimparcial();
 
   // await eldolar()
-
-  setupCron(page);
 });
