@@ -198,7 +198,18 @@ async function postETL(post, page) {
   return postExtended;
 }
 
-const blockedUsers = ['dentaldrcoronado', 'machobarbershop.spa', 'davebaptiste_', 'alansalas_marketingdigital', 'trendyshoponline_tijuana', 'tegajewelry']
+const blockedUsers = [
+  'dentaldrcoronado',
+  'machobarbershop.spa',
+  'davebaptiste_',
+  'alansalas_marketingdigital',
+  'trendyshoponline_tijuana',
+  'tegajewelry',
+  'nutri_foodies_tijuana',
+  'abbaswellnessmarket',
+  'bajamarklaser',
+  'marsanchez_studio',
+]
 
 function isUserBlocked(username) {
   return blockedUsers.includes(username)
