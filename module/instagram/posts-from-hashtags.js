@@ -200,6 +200,7 @@ async function postETL(post, page) {
 
 const blockedUsers = [
   'tegajewelry',
+  'foodiesalvaje',
   'bajamarklaser',
   'davebaptiste_',
   'dentaldrcoronado',
