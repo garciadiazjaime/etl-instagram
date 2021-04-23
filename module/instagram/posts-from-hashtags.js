@@ -203,6 +203,7 @@ const blockedUsers = [
   'foodiesalvaje',
   'bajamarklaser',
   'davebaptiste_',
+  'cocina_garivez',
   'dentaldrcoronado',
   'marsanchez_studio',
   'abbaswellnessmarket',
