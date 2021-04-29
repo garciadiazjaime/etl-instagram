@@ -205,6 +205,7 @@ const blockedUsers = [
   'davebaptiste_',
   'cocina_garivez',
   'dentaldrcoronado',
+  'lash_extencioness',
   'marsanchez_studio',
   'abbaswellnessmarket',
   'machobarbershop.spa',
