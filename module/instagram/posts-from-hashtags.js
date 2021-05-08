@@ -199,6 +199,8 @@ async function postETL(post, page) {
 }
 
 const blockedUsers = [
+  'feedmetj',
+  'petcornn',
   'tegajewelry',
   'foodiesalvaje',
   'bajamarklaser',
