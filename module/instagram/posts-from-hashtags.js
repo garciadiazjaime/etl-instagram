@@ -200,13 +200,17 @@ async function postETL(post, page) {
 
 const blockedUsers = [
   'feedmetj',
+  'gomez_bc',
   'petcornn',
   'nenny_luv',
   'gochimusic',
+  'xeniaodette',
   'tegajewelry',
   've_que_rico',
+  'abbas_house',
   'depasaditasm',
   'foodiesalvaje',
+  'aguaselcamino',
   'bajamarklaser',
   'davebaptiste_',
   'mexicalicious',
@@ -220,6 +224,7 @@ const blockedUsers = [
   'ninas-house-spa-deli',
   'nutri_foodies_tijuana',
   'trendyshoponline_tijuana',
+  'victoria.joyeria.mexicana',
   'alansalas_marketingdigital',
 ]
 
