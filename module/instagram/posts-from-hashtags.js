@@ -199,12 +199,14 @@ async function postETL(post, page) {
 }
 
 const blockedUsers = [
+  'sal35r',
   'feedmetj',
   'gomez_bc',
   'petcornn',
   'nenny_luv',
   'gochimusic',
   'geekchictj',
+  'arianneglr',
   'xeniaodette',
   'tegajewelry',
   've_que_rico',
@@ -217,9 +219,12 @@ const blockedUsers = [
   'davebaptiste_',
   'mexicalicious',
   'cocina_garivez',
+  '_yanetsalgado_',
   'elmakeupdemama',
+  'yosoyangelomar',
   'clubtengohambre',
   'el.pulgas.treats',
+  'better_call_pepe',
   'dentaldrcoronado',
   'rosariocano_drums',
   'mcpublicrelations',
