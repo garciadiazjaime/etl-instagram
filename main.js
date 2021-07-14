@@ -22,7 +22,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(morgan('combined'));
-app.use(express.static('public'))
+app.use(express.static('public'));
 
 app.get('/', (req, res) => res.json({ msg: ':)' }));
 
@@ -34,7 +34,7 @@ function setupCron(page) {
   cron.schedule('42 */2 * * *', async () => {
     await hashtagETL(page);
 
-    await eldolar()
+    await eldolar();
   });
 
   cron.schedule('42 */4 * * *', async () => {

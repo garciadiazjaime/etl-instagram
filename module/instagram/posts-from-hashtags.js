@@ -13,12 +13,15 @@ const isProduction = config.get('env') === 'production';
 const { JSDOM } = jsdom;
 
 function getImage(media) {
-  debug(media);
-  if (media.image_versions2 && Array.isArray(media.image_versions2.candidates) && media.image_versions2.candidates.length) {
+  if (media.image_versions2
+      && Array.isArray(media.image_versions2.candidates)
+      && media.image_versions2.candidates.length) {
     return media.image_versions2.candidates[0].url;
   }
 
-  if (media.carousel_media && Array.isArray(media.carousel_media) && Array.isArray(media.carousel_media[0].image_versions2.candidates)) {
+  if (media.carousel_media
+      && Array.isArray(media.carousel_media)
+      && Array.isArray(media.carousel_media[0].image_versions2.candidates)) {
     return media.carousel_media[0].image_versions2.candidates[0].url;
   }
 
@@ -55,7 +58,7 @@ function getPostsFromGraphql(graphql, hashtag) {
 
   if (!Array.isArray(edges) || !edges) {
     debug((`${hashtag}:NO_EDGES`));
-    return resolve([]);
+    return [];
   }
 
   return edges.map(({ node: post }) => ({
@@ -97,13 +100,26 @@ async function hashtagETL(hashtag, page) {
         debug('NO_GRAPHQL');
       }
 
-      const response = graphql ? getPostsFromGraphql(graphql, hashtag) : getPostsFromData(data, hashtag);
+      const response = graphql
+        ? getPostsFromGraphql(graphql, hashtag) : getPostsFromData(data, hashtag);
 
       debug(`posts: ${response.length}`);
 
       return resolve(response);
     };
   });
+}
+
+function getLocationExtended(data) {
+  if (data.graphql) {
+    return data.graphql.location;
+  }
+
+  if (data.native_location_data && data.native_location_data.location_info) {
+    return data.native_location_data.location_info;
+  }
+
+  return false;
 }
 
 async function locationETL(rawLocation, page) {
@@ -131,7 +147,7 @@ async function locationETL(rawLocation, page) {
 
   const rawData = await page.evaluate(() => JSON.parse(document.querySelector('body').innerText));
 
-  const { location: rawLocationExtended } = rawData.graphql;
+  const rawLocationExtended = getLocationExtended(rawData);
 
   const location = {
     id: rawLocation.id,
@@ -139,18 +155,20 @@ async function locationETL(rawLocation, page) {
     slug: rawLocation.slug,
     hasPublicPage: rawLocation.has_public_page,
     address: rawLocation.address_json,
-
-    phone: rawLocationExtended.phone,
-    aliasOnFB: rawLocationExtended.primary_alias_on_fb,
-    website: rawLocationExtended.website,
-    blurb: rawLocationExtended.blurb,
   };
 
-  if (rawLocationExtended.lat && rawLocationExtended.lng) {
-    location.gps = {
-      type: 'Point',
-      coordinates: [rawLocationExtended.lng, rawLocationExtended.lat],
-    };
+  if (rawLocationExtended) {
+    location.phone = rawLocationExtended.phone;
+    location.aliasOnFB = rawLocationExtended.primary_alias_on_fb;
+    location.website = rawLocationExtended.website;
+    location.blurb = rawLocationExtended.blurb;
+
+    if (rawLocationExtended.lat && rawLocationExtended.lng) {
+      location.gps = {
+        type: 'Point',
+        coordinates: [rawLocationExtended.lng, rawLocationExtended.lat],
+      };
+    }
   }
 
   await Location(location).save();
