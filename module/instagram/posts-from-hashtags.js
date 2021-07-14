@@ -4,8 +4,8 @@ const debug = require('debug')('app:hastag');
 
 const { Post, Location, User } = require('./models');
 const { waiter, getHTML } = require('../../support/fetch');
-const { sendEmail } = require('../../support/email')
-const { getPublicPath } = require('../../support/file')
+const { sendEmail } = require('../../support/email');
+const { getPublicPath } = require('../../support/file');
 const config = require('../../config');
 
 const isProduction = config.get('env') === 'production';
@@ -13,22 +13,21 @@ const isProduction = config.get('env') === 'production';
 const { JSDOM } = jsdom;
 
 function getImage(media) {
-  debug(media)
+  debug(media);
   if (media.image_versions2 && Array.isArray(media.image_versions2.candidates) && media.image_versions2.candidates.length) {
-    return media.image_versions2.candidates[0].url
+    return media.image_versions2.candidates[0].url;
   }
 
   if (media.carousel_media && Array.isArray(media.carousel_media) && Array.isArray(media.carousel_media[0].image_versions2.candidates)) {
-    return media.carousel_media[0].image_versions2.candidates[0].url
+    return media.carousel_media[0].image_versions2.candidates[0].url;
   }
 
-  return null
+  return null;
 }
-
 
 function getPostsFromData({ recent }, hashtag) {
   if (!Array.isArray(recent.sections) || !recent.sections.length) {
-    return null
+    return null;
   }
 
   const items = recent.sections.reduce((accu, item) => {
@@ -42,13 +41,13 @@ function getPostsFromData({ recent }, hashtag) {
         caption: media.caption ? media.caption.text : '',
         mediaUrl: getImage(media),
         source: hashtag,
-      })
-    })
+      });
+    });
 
-    return accu
-  }, [])
+    return accu;
+  }, []);
 
-  return items
+  return items;
 }
 
 function getPostsFromGraphql(graphql, hashtag) {
@@ -70,22 +69,22 @@ function getPostsFromGraphql(graphql, hashtag) {
     accessibility: post.accessibility_caption,
     mediaType: post.__typename, // eslint-disable-line no-underscore-dangle
     source: hashtag,
-  }))
+  }));
 }
 
 async function hashtagETL(hashtag, page) {
   const html = await getHTML(`https://www.instagram.com/explore/tags/${hashtag}/`, page);
   if (!html) {
-    debug('NO_HTML')
-    return []
+    debug('NO_HTML');
+    return [];
   }
 
-  debug(html.slice(0, 1000))
+  debug(html.slice(0, 1000));
 
   if (html.includes('Login • Instagram') || html.includes('Page Not Found • Instagram')) {
     await page.screenshot({ path: `${getPublicPath()}/hashtag-login.png` });
-    await sendEmail('LOGIN_REQUIRED')
-    return []
+    await sendEmail('LOGIN_REQUIRED');
+    return [];
   }
 
   return new Promise((resolve) => {
@@ -95,12 +94,12 @@ async function hashtagETL(hashtag, page) {
       const { graphql, data } = dom.window._sharedData.entry_data.TagPage[0]; // eslint-disable-line
 
       if (!graphql) {
-        debug('NO_GRAPHQL')
+        debug('NO_GRAPHQL');
       }
 
-      const response = graphql ? getPostsFromGraphql(graphql, hashtag) : getPostsFromData(data, hashtag)
+      const response = graphql ? getPostsFromGraphql(graphql, hashtag) : getPostsFromData(data, hashtag);
 
-      debug(`posts: ${response.length}`)
+      debug(`posts: ${response.length}`);
 
       return resolve(response);
     };
@@ -163,8 +162,8 @@ async function postETL(post, page) {
   const postURL = `https://www.instagram.com/graphql/query/?query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22${post.shortcode}%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D`;
   const response = await getHTML(postURL, page);
   if (!response) {
-    debug('URL_ERROR')
-    return {}
+    debug('URL_ERROR');
+    return {};
   }
 
   if (response.includes('Login • Instagram')) {
@@ -212,6 +211,7 @@ const blockedUsers = [
   've_que_rico',
   'abbas_house',
   'depasaditasm',
+  'nutrifittt92',
   'chefmexicana',
   'foodiesalvaje',
   'aguaselcamino',
@@ -226,6 +226,7 @@ const blockedUsers = [
   'el.pulgas.treats',
   'better_call_pepe',
   'dentaldrcoronado',
+  'damianreyes_price',
   'rosariocano_drums',
   'mcpublicrelations',
   'lash_extencioness',
@@ -238,10 +239,10 @@ const blockedUsers = [
   'trendyshoponline_tijuana',
   'victoria.joyeria.mexicana',
   'alansalas_marketingdigital',
-]
+];
 
 function isUserBlocked(username) {
-  return blockedUsers.includes(username)
+  return blockedUsers.includes(username);
 }
 
 async function extendPostsAndSave(posts, page, hashtag) {
@@ -281,7 +282,7 @@ async function extendPostsAndSave(posts, page, hashtag) {
     }
 
     if (!isProduction) {
-      debug(postExtended)
+      debug(postExtended);
     }
 
     count += 1;
@@ -308,7 +309,7 @@ async function main(page) {
 
     debug(`${hashtag}:postsFromHashtag:${postsFromHashtag.length}`);
 
-    const posts = isProduction ? postsFromHashtag : postsFromHashtag.slice(0, 1)
+    const posts = isProduction ? postsFromHashtag : postsFromHashtag.slice(0, 1);
     await extendPostsAndSave(posts, page, hashtag);
   });
 
