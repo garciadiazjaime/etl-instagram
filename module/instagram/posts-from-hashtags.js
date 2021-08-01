@@ -244,6 +244,7 @@ const blockedUsers = [
   'clubtengohambre',
   'el.pulgas.treats',
   'better_call_pepe',
+  'nedelkamartinsen',
   'dentaldrcoronado',
   'damianreyes_price',
   'rosariocano_drums',
