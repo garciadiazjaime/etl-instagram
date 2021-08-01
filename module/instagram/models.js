@@ -33,6 +33,11 @@ const LocationSchema = new mongoose.Schema({
 
 LocationSchema.index({ gps: '2dsphere' });
 
+const LabelSchema = new Schema({
+  confidence: Number,
+  name: String,
+});
+
 const PostSchema = new Schema({
   id: String,
   likeCount: Number,
@@ -44,6 +49,7 @@ const PostSchema = new Schema({
   mediaType: String,
   source: String,
   accessibility: String,
+  labels: [LabelSchema],
 
   user: UserSchema,
   location: LocationSchema,

@@ -1,11 +1,12 @@
 const jsdom = require('jsdom');
 const mapSeries = require('async/mapSeries');
-const debug = require('debug')('app:hastag');
+const debug = require('debug')('app:hashtag');
 
 const { Post, Location, User } = require('./models');
 const { waiter, getHTML } = require('../../support/fetch');
 const { sendEmail } = require('../../support/email');
 const { getPublicPath } = require('../../support/file');
+const { getLabels } = require('./labels');
 const config = require('../../config');
 
 const isProduction = config.get('env') === 'production';
@@ -297,6 +298,15 @@ async function extendPostsAndSave(posts, page, hashtag) {
 
     if (location) {
       postExtended.location = location;
+    }
+
+    const labels = await getLabels(post);
+    debug(labels);
+    if (labels && Array.isArray(labels.Labels) && labels.Labels.length) {
+      postExtended.labels = labels.Labels.map(({ Confidence, Name }) => ({
+        confidence: Confidence,
+        name: Name,
+      }));
     }
 
     if (!isProduction) {

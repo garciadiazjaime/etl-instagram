@@ -48,6 +48,20 @@ const config = convict({
     default: '',
     env: 'SENDGRID_API_KEY',
   },
+  aws: {
+    key: {
+      env: 'AWS_KEY',
+      default: '',
+    },
+    secret: {
+      default: '',
+      env: 'AWS_SECRET',
+    },
+    region: {
+      default: '',
+      env: 'AWS_REGION',
+    },
+  },
 });
 
 // Perform validation
