@@ -8,7 +8,7 @@ const RateSchema = new Schema({
   buy: { type: Number, required: true },
   sell: { type: Number, required: true },
   source: { type: String, required: true },
-  createdAt: { type: Date, required: true }
+  createdAt: { type: Date, required: true },
 });
 
 const Rate = mongoose.model('rate', RateSchema);

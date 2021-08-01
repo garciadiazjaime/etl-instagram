@@ -46,7 +46,7 @@ async function getHTML(url, page) {
   } catch (error) {
     debug('getHTML:error');
     debug(error);
-    return null
+    return null;
   }
 
   const html = await page.content();

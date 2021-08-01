@@ -1,4 +1,4 @@
-const fs = require('fs')
+const fs = require('fs');
 
 function getPublicPath() {
   const path = './public';
@@ -7,9 +7,9 @@ function getPublicPath() {
     fs.mkdirSync(path);
   }
 
-  return path
+  return path;
 }
 
 module.exports = {
-  getPublicPath
-}
+  getPublicPath,
+};

@@ -1,8 +1,8 @@
-const sgMail = require('@sendgrid/mail')
+const sgMail = require('@sendgrid/mail');
 
 const config = require('../config');
 
-sgMail.setApiKey(config.get('sendgrid'))
+sgMail.setApiKey(config.get('sendgrid'));
 
 const params = {
   to: 'info@mintitmedia.com', // Change to your recipient
@@ -10,18 +10,16 @@ const params = {
   subject: 'etl-instagram',
   text: '',
   html: '',
-}
+};
 
-
-async function sendEmail (msg) {
+async function sendEmail(msg) {
   return sgMail.send({
     ...params,
     text: msg,
     html: msg,
-  })
+  });
 }
-
 
 module.exports = {
-  sendEmail
-}
+  sendEmail,
+};

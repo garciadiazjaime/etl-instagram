@@ -18,12 +18,12 @@ async function exchangeETL() {
 
   const rates = [];
 
-  const createdAt = new Date()
+  const createdAt = new Date();
 
-  items.forEach(item => {
+  items.forEach((item) => {
     const child = new JSDOM(`<table><tr>${item.innerHTML}</tr></table>`);
     const anchor = child.window.document.querySelector('a');
-    const rate = child.window.document.querySelectorAll('.xTimes')
+    const rate = child.window.document.querySelectorAll('.xTimes');
 
     rates.push({
       entity: anchor.firstChild.title,
@@ -32,14 +32,14 @@ async function exchangeETL() {
       sell: rate[1] ? rate[1].textContent : rate[0].textContent,
       source: 'eldolar',
       createdAt,
-    })
+    });
   });
 
-  const promises = rates.map(async (item) => Rate(item).save())
+  const promises = rates.map(async (item) => Rate(item).save());
 
-  await Promise.all(promises)
+  await Promise.all(promises);
 
-  debug(`rates saved: ${promises.length}`)
+  debug(`rates saved: ${promises.length}`);
 }
 
 async function main() {

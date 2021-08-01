@@ -68,4 +68,5 @@ app.listen(PORT, async () => {
   // await elimparcial();
 
   // await eldolar()
+  return null;
 });

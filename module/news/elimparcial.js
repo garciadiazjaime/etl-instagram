@@ -77,8 +77,8 @@ async function singleNewsETL(item) {
 
   if (!image.length) {
     debug(`no_image:${item.url}`);
-    debug(item)
-    return item
+    debug(item);
+    return item;
   }
 
   const paragraphs = getContentFromSelectors(dom, ['.newsfull__body p', '.land-see-body-content p']);
