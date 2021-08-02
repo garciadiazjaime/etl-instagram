@@ -7,16 +7,6 @@ const config = require('../../config');
 
 const bucket = 'jaimeg4-food3';
 
-const awsConfig = {
-  accessKeyId: config.get('aws.key'),
-  secretAccessKey: config.get('aws.secret'),
-  region: config.get('aws.region'),
-};
-
-const s3Client = new S3Client(awsConfig);
-
-const rekognitionClient = new RekognitionClient(awsConfig);
-
 function download(uri) {
   return fetch(uri).then((res) => {
     if (!res.ok) {
@@ -44,6 +34,14 @@ async function uploadImage(post) {
   };
   const command = new PutObjectCommand(params);
 
+  const awsConfig = {
+    accessKeyId: config.get('aws.key'),
+    secretAccessKey: config.get('aws.secret'),
+    region: config.get('aws.region'),
+  };
+  debug('awsConfig:uploadImage', awsConfig);
+  const s3Client = new S3Client(awsConfig);
+
   try {
     await s3Client.send(command);
     return filename;
@@ -65,6 +63,14 @@ async function extractLabels(filename) {
     MaxLabels: 10,
   };
   const command = new DetectLabelsCommand(params);
+
+  const awsConfig = {
+    accessKeyId: config.get('aws.key'),
+    secretAccessKey: config.get('aws.secret'),
+    region: config.get('aws.region'),
+  };
+  debug('awsConfig:rekognitionClient', awsConfig);
+  const rekognitionClient = new RekognitionClient(awsConfig);
 
   try {
     return rekognitionClient.send(command);
