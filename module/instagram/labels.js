@@ -26,6 +26,11 @@ async function uploadImage(post) {
     return null;
   }
 
+  const awsConfig = {
+    region: config.get('aws.region'),
+  };
+  const s3Client = new S3Client(awsConfig);
+
   const filename = `${id}.jpg`;
   const params = {
     Bucket: bucket,
@@ -33,14 +38,6 @@ async function uploadImage(post) {
     Body: buffer,
   };
   const command = new PutObjectCommand(params);
-
-  const awsConfig = {
-    accessKeyId: config.get('aws.key'),
-    secretAccessKey: config.get('aws.secret'),
-    region: config.get('aws.region'),
-  };
-  debug('awsConfig:uploadImage', awsConfig);
-  const s3Client = new S3Client(awsConfig);
 
   try {
     await s3Client.send(command);
@@ -65,11 +62,8 @@ async function extractLabels(filename) {
   const command = new DetectLabelsCommand(params);
 
   const awsConfig = {
-    accessKeyId: config.get('aws.key'),
-    secretAccessKey: config.get('aws.secret'),
     region: config.get('aws.region'),
   };
-  debug('awsConfig:rekognitionClient', awsConfig);
   const rekognitionClient = new RekognitionClient(awsConfig);
 
   try {
