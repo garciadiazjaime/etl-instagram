@@ -50,6 +50,7 @@ const PostSchema = new Schema({
   source: String,
   accessibility: String,
   labels: [LabelSchema],
+  topics: [LabelSchema],
 
   user: UserSchema,
   location: LocationSchema,

@@ -3,9 +3,11 @@ const { RekognitionClient, DetectLabelsCommand } = require('@aws-sdk/client-reko
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const debug = require('debug')('app:labels');
-const config = require('../../config');
 
 const bucket = 'jaimeg4-food3';
+const awsConfig = {
+  region: 'us-west-2',
+};
 
 function download(uri) {
   return fetch(uri).then((res) => {
@@ -26,9 +28,6 @@ async function uploadImage(post) {
     return null;
   }
 
-  const awsConfig = {
-    region: config.get('aws.region'),
-  };
   const s3Client = new S3Client(awsConfig);
 
   const filename = `${id}.jpg`;
@@ -60,10 +59,6 @@ async function extractLabels(filename) {
     MaxLabels: 10,
   };
   const command = new DetectLabelsCommand(params);
-
-  const awsConfig = {
-    region: config.get('aws.region'),
-  };
   const rekognitionClient = new RekognitionClient(awsConfig);
 
   try {

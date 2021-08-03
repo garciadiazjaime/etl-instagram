@@ -7,6 +7,7 @@ const { waiter, getHTML } = require('../../support/fetch');
 const { sendEmail } = require('../../support/email');
 const { getPublicPath } = require('../../support/file');
 const { getLabels } = require('./labels');
+const { getTopics } = require('./topics');
 const config = require('../../config');
 
 const isProduction = config.get('env') === 'production';
@@ -242,6 +243,7 @@ const blockedUsers = [
   'elmakeupdemama',
   'yosoyangelomar',
   'clubtengohambre',
+  'isabel__dlvga__',
   'el.pulgas.treats',
   'better_call_pepe',
   'nedelkamartinsen',
@@ -302,12 +304,16 @@ async function extendPostsAndSave(posts, page, hashtag) {
     }
 
     const labels = await getLabels(post);
-    debug(labels);
     if (labels && Array.isArray(labels.Labels) && labels.Labels.length) {
       postExtended.labels = labels.Labels.map(({ Confidence, Name }) => ({
         confidence: Confidence,
         name: Name,
       }));
+    }
+
+    const topics = await getTopics(post);
+    if (Array.isArray(topics) && topics.length) {
+      postExtended.topics = topics;
     }
 
     if (!isProduction) {
