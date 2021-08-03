@@ -326,7 +326,7 @@ async function extendPostsAndSave(posts, page, hashtag) {
       upsert: true,
     });
 
-    debug(`${hashtag}:post_saved:${post.shortcode}:${count}/${posts.length}`);
+    debug(`${hashtag}:post_saved:${post.id}:${count}/${posts.length}`);
 
     await waiter();
 
