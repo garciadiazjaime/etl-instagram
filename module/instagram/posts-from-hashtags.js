@@ -311,7 +311,7 @@ async function extendPostsAndSave(posts, page, hashtag) {
       }));
     }
 
-    const topics = await getTopics(post);
+    const topics = getTopics(post);
     if (Array.isArray(topics) && topics.length) {
       postExtended.topics = topics;
     }

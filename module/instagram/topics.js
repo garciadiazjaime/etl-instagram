@@ -2,7 +2,7 @@ const debug = require('debug')('app:topics');
 
 const LDA = require('./lda');
 
-async function getTopics(post) {
+function getTopics(post) {
   const terms = 7;
   const {
     caption,
@@ -25,9 +25,9 @@ async function getTopics(post) {
   if (location && location.name) {
     content.push(`${location.name}.`);
   }
-
+  debug(content);
   const documents = content.join('.').match(/[^\.!\?]+[\.!\?]+/g);
-  const [topics] = LDA(documents || [content], 1, terms, ['es']);
+  const [topics] = LDA(documents, 1, terms, ['es']);
 
   if (!topics) {
     debug(`NO_TOPICS:${id}`);
