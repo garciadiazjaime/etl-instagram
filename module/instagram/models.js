@@ -58,12 +58,33 @@ const PostSchema = new Schema({
   timestamps: true,
 });
 
+const FollowerSchema = new mongoose.Schema({
+  id: { type: String },
+  username: { type: String },
+  fullName: { type: String },
+  profilePicture: { type: String },
+
+  biography: { type: String },
+  category_name: { type: String },
+  following: { type: Number },
+  followers: { type: Number },
+  posts: { type: Number },
+  is_business_account: { type: Boolean },
+  is_professional_accountis_professional_account: { type: Boolean },
+  is_verified: { type: Boolean },
+  media: [PostSchema],
+}, {
+  timestamps: true,
+});
+
 const Post = mongoose.model('post', PostSchema);
 const Location = mongoose.model('location', LocationSchema);
 const User = mongoose.model('user', UserSchema);
+const Follower = mongoose.model('follower', FollowerSchema);
 
 module.exports = {
   Post,
   Location,
   User,
+  Follower,
 };

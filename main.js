@@ -6,6 +6,7 @@ const fetch = require('node-fetch');
 const debug = require('debug')('app:main');
 
 const hashtagETL = require('./module/instagram/posts-from-hashtags');
+const extendFollowers = require('./module/instagram/extend-followers');
 const elimparcial = require('./module/news/elimparcial');
 const eldolar = require('./module/dolar/eldolar');
 const loginETL = require('./module/instagram/login');
@@ -64,6 +65,8 @@ app.listen(PORT, async () => {
   setupCron(page);
 
   await hashtagETL(page);
+
+  await extendFollowers(page);
 
   // await elimparcial();
 
