@@ -77,7 +77,7 @@ async function extendFollowers(page) {
     updatedAt: -1,
   });
 
-  let count = 0;
+  let count = 1;
 
   debug(`proccesing ${limit} / ${followers.length}`);
 
@@ -93,7 +93,6 @@ async function extendFollowers(page) {
       return debug('LOGIN_REQUIRED');
     }
 
-    debug('getDataFromDOM...');
     const data = await getDataFromDOM(html);
     if (!data) {
       return debug('NO_DATA');
@@ -103,7 +102,7 @@ async function extendFollowers(page) {
       upsert: true,
     });
 
-    debug(`follower ${follower.id} [${count}/${limit}] updated...`);
+    debug(`${follower.id} [${count}/${limit}] updated`);
     count += 1;
 
     await waiter();
