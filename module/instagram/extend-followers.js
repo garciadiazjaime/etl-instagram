@@ -9,6 +9,7 @@ const { Follower } = require('./models');
 
 const { JSDOM } = jsdom;
 const isProduction = config.get('env') === 'production';
+const limit = isProduction ? 20 : 1;
 
 function getPostCaption(caption) {
   if (!caption || !Array.isArray(caption.edges) || !caption.edges.length) {
@@ -76,8 +77,7 @@ async function extendFollowers(page) {
     updatedAt: -1,
   });
 
-  const limit = isProduction ? 10 : 1;
-  const count = 0;
+  let count = 0;
 
   debug(`proccesing ${limit} / ${followers.length}`);
 
@@ -104,6 +104,7 @@ async function extendFollowers(page) {
     });
 
     debug(`follower ${follower.id} [${count}/${limit}] updated...`);
+    count += 1;
 
     await waiter();
 

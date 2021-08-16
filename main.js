@@ -38,6 +38,10 @@ function setupCron(page) {
     await eldolar();
   });
 
+  cron.schedule('17 */2 * * *', async () => {
+    await extendFollowers(page);
+  });
+
   cron.schedule('42 */4 * * *', async () => {
     await elimparcial();
   });
@@ -64,7 +68,7 @@ app.listen(PORT, async () => {
 
   setupCron(page);
 
-  await hashtagETL(page);
+  // await hashtagETL(page);
 
   await extendFollowers(page);
 
