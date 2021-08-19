@@ -84,7 +84,7 @@ async function hashtagETL(hashtag, page) {
     return [];
   }
 
-  debug(html.slice(0, 1000));
+  debug(html.slice(0, 500));
 
   if (html.includes('Login • Instagram') || html.includes('Page Not Found • Instagram')) {
     await page.screenshot({ path: `${getPublicPath()}/hashtag-login.png` });

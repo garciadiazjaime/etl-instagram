@@ -25,7 +25,7 @@ function getTopics(post) {
   if (location && location.name) {
     content.push(`${location.name}.`);
   }
-  debug(content);
+
   const documents = content.join('.').match(/[^\.!\?]+[\.!\?]+/g);
   const [topics] = LDA(documents, 1, terms, ['es']);
 
