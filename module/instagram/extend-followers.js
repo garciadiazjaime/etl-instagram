@@ -94,9 +94,9 @@ async function extendFollowers(page) {
     }
 
     if (html.includes('Content Unavailable')) {
-      debug('NO_CONTENT');
+      debug(`NO_CONTENT:${follower.username}`);
 
-      await Follower.remove({ id: follower.id });
+      await Follower.deleteOne({ id: follower.id });
 
       return null;
     }

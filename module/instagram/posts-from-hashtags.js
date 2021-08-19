@@ -246,6 +246,7 @@ const blockedUsers = [
   'clubtengohambre',
   'isabel__dlvga__',
   'el.pulgas.treats',
+  'lizethbajaestate',
   'better_call_pepe',
   'nedelkamartinsen',
   'constanzafregoso',
