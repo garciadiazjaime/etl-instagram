@@ -68,6 +68,8 @@ app.listen(PORT, async () => {
 
   setupCron(page);
 
+  await fetch(API_URL);
+
   // await hashtagETL(page);
 
   await extendFollowers(page);

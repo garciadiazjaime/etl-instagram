@@ -93,6 +93,14 @@ async function extendFollowers(page) {
       return debug('LOGIN_REQUIRED');
     }
 
+    if (html.includes('Content Unavailable')) {
+      debug('NO_CONTENT');
+
+      await Follower.remove({ id: follower.id });
+
+      return null;
+    }
+
     const data = await getDataFromDOM(html);
     if (!data) {
       return debug('NO_DATA');
