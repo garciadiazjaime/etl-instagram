@@ -245,6 +245,7 @@ const blockedUsers = [
   'yosoyangelomar',
   'clubtengohambre',
   'isabel__dlvga__',
+  'fina_reposteria_',
   'el.pulgas.treats',
   'lizethbajaestate',
   'better_call_pepe',
@@ -262,6 +263,7 @@ const blockedUsers = [
   'ninas-house-spa-deli',
   'nutri_foodies_tijuana',
   'trendyshoponline_tijuana',
+  'nutriologajoselinalvarez',
   'victoria.joyeria.mexicana',
   'alansalas_marketingdigital',
 ];

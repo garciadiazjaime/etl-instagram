@@ -58,7 +58,7 @@ async function getDataFromDOM(html) {
         followers: user.edge_followed_by.count,
         posts: user.edge_owner_to_timeline_media.count,
         is_business_account: user.is_business_account,
-        is_professional_accountis_professional_account: user.is_professional_account,
+        is_professional_account: user.is_professional_account,
         is_verified: user.is_verified,
         media: getPosts(user.edge_owner_to_timeline_media),
       };
@@ -90,10 +90,12 @@ async function extendFollowers(page) {
 
     const loginRequired = await isLoginRequired(html, page);
     if (loginRequired) {
+      debug(html.slice(0, 500));
       return debug('LOGIN_REQUIRED');
     }
 
-    if (html.includes('Content Unavailable')) {
+    if (html.includes('Content Unavailable') || html.includes('Page Not Found • Instagram')) {
+      debug(html.slice(0, 500));
       debug(`NO_CONTENT:${follower.username}`);
 
       await Follower.deleteOne({ id: follower.id });

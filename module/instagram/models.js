@@ -70,7 +70,7 @@ const FollowerSchema = new mongoose.Schema({
   followers: { type: Number },
   posts: { type: Number },
   is_business_account: { type: Boolean },
-  is_professional_accountis_professional_account: { type: Boolean },
+  is_professional_account: { type: Boolean },
   is_verified: { type: Boolean },
   media: [PostSchema],
 }, {
