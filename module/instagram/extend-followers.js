@@ -10,6 +10,7 @@ const { Follower } = require('./models');
 const { JSDOM } = jsdom;
 const isProduction = config.get('env') === 'production';
 const limit = isProduction ? 20 : 1;
+let hasLoginNotificationSent = false;
 
 function getPostCaption(caption) {
   if (!caption || !Array.isArray(caption.edges) || !caption.edges.length) {
@@ -68,7 +69,10 @@ async function getDataFromDOM(html) {
   });
 }
 
-async function extendFollowers(page) {
+async function main(page) {
+  if (hasLoginNotificationSent) {
+    return debug('SKIP_RUN_:(');
+  }
   const followers = await Follower.find({
     biography: {
       $exists: 0,
@@ -91,6 +95,7 @@ async function extendFollowers(page) {
     const loginRequired = await isLoginRequired(html, page);
     if (loginRequired) {
       debug(html.slice(0, 500));
+      hasLoginNotificationSent = true;
       return debug('LOGIN_REQUIRED');
     }
 
@@ -119,6 +124,8 @@ async function extendFollowers(page) {
 
     return null;
   });
+
+  return null;
 }
 
-module.exports = extendFollowers;
+module.exports = main;
