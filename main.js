@@ -70,9 +70,9 @@ app.listen(PORT, async () => {
 
   await fetch(API_URL);
 
-  // await hashtagETL(page);
+  await hashtagETL(page);
 
-  await extendFollowers(page);
+  // await extendFollowers(page);
 
   // await elimparcial();
 

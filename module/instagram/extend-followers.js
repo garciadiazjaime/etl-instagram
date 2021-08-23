@@ -9,7 +9,7 @@ const { Follower } = require('./models');
 
 const { JSDOM } = jsdom;
 const isProduction = config.get('env') === 'production';
-const limit = isProduction ? 20 : 1;
+const limit = isProduction ? 10 : 1;
 let hasLoginNotificationSent = false;
 
 function getPostCaption(caption) {
@@ -64,15 +64,18 @@ async function getDataFromDOM(html) {
         media: getPosts(user.edge_owner_to_timeline_media),
       };
 
-      resolve(data);
+      return resolve(data);
     };
   });
 }
 
 async function main(page) {
+  debug('start');
+
   if (hasLoginNotificationSent) {
     return debug('SKIP_RUN_:(');
   }
+
   const followers = await Follower.find({
     biography: {
       $exists: 0,
@@ -86,6 +89,10 @@ async function main(page) {
   debug(`proccesing ${limit} / ${followers.length}`);
 
   await mapSeries(followers.slice(0, limit), async (follower) => {
+    if (hasLoginNotificationSent) {
+      return debug('SKIP_RUN_:(');
+    }
+
     const url = `https://www.instagram.com/${follower.username}/`;
     const html = await getHTML(url, page);
     if (!html) {
@@ -125,7 +132,7 @@ async function main(page) {
     return null;
   });
 
-  return null;
+  return debug('end');
 }
 
 module.exports = main;

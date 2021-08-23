@@ -15,7 +15,6 @@ async function main() {
   await page.goto(url);
 
   let html = await page.content();
-  debug(html.slice(0, 1000));
 
   if (html.includes('Page Not Found • Instagram')) {
     url = 'https://www.instagram.com/';
@@ -23,7 +22,7 @@ async function main() {
     await page.goto(url);
 
     html = await page.content();
-    debug(html.slice(0, 1000));
+    debug(html.slice(0, 500));
   }
 
   await page.waitForSelector('form', { timeout: 1000 * 3 });
@@ -39,10 +38,15 @@ async function main() {
 
   await page.screenshot({ path: `${getPublicPath()}/login-after.png` });
   html = await page.content();
-  debug(html.slice(0, 1000));
+  debug(html.slice(0, 500));
 
   if (html.includes('Suspicious Login Attempt')) {
     await sendEmail('SUSPICIOUS_ATTEMPT');
+    return null;
+  }
+
+  if (html.includes('Your Account Has Been Temporarily Locked')) {
+    await sendEmail('ACCOUNT_LOCKED');
     return null;
   }
 

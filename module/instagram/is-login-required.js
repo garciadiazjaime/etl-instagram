@@ -7,7 +7,7 @@ const isProduction = config.get('env') === 'production';
 async function isLoginRequired(html, page) {
   if (html.includes('Login • Instagram')) {
     if (isProduction) {
-      await page.screenshot({ path: `${getPublicPath()}/hashtag-login.png` });
+      await page.screenshot({ path: `${getPublicPath()}/login-required.png` });
       await sendEmail('LOGIN_REQUIRED');
     }
 
