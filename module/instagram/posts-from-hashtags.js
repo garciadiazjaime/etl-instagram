@@ -94,7 +94,7 @@ async function hashtagETL(hashtag, page) {
     return [];
   }
 
-  const loginRequired = isLoginRequired(html, page);
+  const loginRequired = await isLoginRequired(html, page);
   if (loginRequired) {
     debug(html.slice(0, 500));
     hasLoginNotificationSent = true;
