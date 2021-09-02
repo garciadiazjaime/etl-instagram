@@ -2,15 +2,16 @@ const jsdom = require('jsdom');
 const mapSeries = require('async/mapSeries');
 const debug = require('debug')('app:hashtag');
 
+const isLoginRequired = require('./is-login-required');
 const { Post, Location, User } = require('./models');
 const { waiter, getHTML } = require('../../support/fetch');
-const { sendEmail } = require('../../support/email');
 const { getPublicPath } = require('../../support/file');
 const { getLabels } = require('./labels');
 const { getTopics } = require('./topics');
 const config = require('../../config');
 
 const isProduction = config.get('env') === 'production';
+let hasLoginNotificationSent = false;
 
 const { JSDOM } = jsdom;
 
@@ -86,9 +87,24 @@ async function hashtagETL(hashtag, page) {
 
   debug(html.slice(0, 500));
 
-  if (html.includes('Login • Instagram') || html.includes('Page Not Found • Instagram')) {
-    await page.screenshot({ path: `${getPublicPath()}/hashtag-login.png` });
-    await sendEmail('LOGIN_REQUIRED');
+  if (html.includes('Oops, an error occurred')) {
+    debug('ERROR');
+    await page.screenshot({ path: `${getPublicPath()}/hashtag-error.png` });
+
+    return [];
+  }
+
+  const loginRequired = isLoginRequired(html, page);
+  if (loginRequired) {
+    debug(html.slice(0, 500));
+    hasLoginNotificationSent = true;
+    debug('LOGIN_REQUIRED');
+    return [];
+  }
+
+  if (html.includes('Content Unavailable') || html.includes('Page Not Found • Instagram')) {
+    await page.screenshot({ path: `${getPublicPath()}/hashtag-no-content.png` });
+
     return [];
   }
 
@@ -340,6 +356,12 @@ async function extendPostsAndSave(posts, page, hashtag) {
 }
 
 async function main(page) {
+  debug('============ start ============');
+
+  if (hasLoginNotificationSent) {
+    return debug('SKIP_RUN_:(');
+  }
+
   const data = config.get('instagram.hashtags').split(',');
   const hashtags = isProduction ? data : data.slice(0, 1);
 
@@ -353,7 +375,7 @@ async function main(page) {
     await extendPostsAndSave(posts, page, hashtag);
   });
 
-  debug('============ done ============');
+  return debug('============ done ============');
 }
 
 module.exports = main;

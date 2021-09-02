@@ -4,6 +4,7 @@ const debug = require('debug')('app:extend-followers');
 
 const isLoginRequired = require('./is-login-required');
 const { waiter, getHTML } = require('../../support/fetch');
+const { getPublicPath } = require('../../support/file');
 const config = require('../../config');
 const { Follower } = require('./models');
 
@@ -109,6 +110,8 @@ async function main(page) {
     if (html.includes('Content Unavailable') || html.includes('Page Not Found • Instagram')) {
       debug(html.slice(0, 500));
       debug(`NO_CONTENT:${follower.username}`);
+
+      await page.screenshot({ path: `${getPublicPath()}/follower-no-content.png` });
 
       await Follower.deleteOne({ id: follower.id });
 
