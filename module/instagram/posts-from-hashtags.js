@@ -366,6 +366,9 @@ async function main(page) {
   const hashtags = isProduction ? data : data.slice(0, 1);
 
   await mapSeries(hashtags, async (hashtag) => {
+    if (hasLoginNotificationSent) {
+      return debug('SKIP_RUN_:(');
+    }
     const postsFromHashtag = await hashtagETL(hashtag, page);
     await waiter();
 
