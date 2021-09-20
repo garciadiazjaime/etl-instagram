@@ -46,7 +46,7 @@ function setupCron(page) {
     await elimparcial();
   });
 
-  cron.schedule('*/20 * * * *', async () => {
+  cron.schedule('*/10 * * * *', async () => {
     await fetch(API_URL);
   });
 
