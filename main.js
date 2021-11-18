@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cron = require('node-cron');
 const fetch = require('node-fetch');
 const debug = require('debug')('app:main');
+const cron = require('node-cron');
 
 const hashtagETL = require('./module/instagram/posts-from-hashtags');
 const extendFollowers = require('./module/instagram/extend-followers');
@@ -32,11 +33,11 @@ function setupCron(page) {
     return debug('CRON_NOT_SETUP');
   }
 
-  cron.schedule('42 */3 * * *', async () => {
-    await hashtagETL(page);
+  // cron.schedule('42 */3 * * *', async () => {
+  //   await hashtagETL(page);
 
-    // await eldolar();
-  });
+  //   // await eldolar();
+  // });
 
   // cron.schedule('17 */2 * * *', async () => {
   //   await extendFollowers(page);
