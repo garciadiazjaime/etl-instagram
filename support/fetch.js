@@ -17,7 +17,6 @@ async function waiter() {
 async function getPage(cookies) {
   const opts = {
     headless: true,
-    executablePath: '/usr/bin/chromium-browser',
     args: [
       '--no-sandbox',
       '--disable-gpu',
