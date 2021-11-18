@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const cron = require('node-cron');
 const fetch = require('node-fetch');
 const debug = require('debug')('app:main');
-const cron = require('node-cron');
 
 const hashtagETL = require('./module/instagram/posts-from-hashtags');
 const extendFollowers = require('./module/instagram/extend-followers');
