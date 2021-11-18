@@ -32,11 +32,11 @@ function setupCron(page) {
     return debug('CRON_NOT_SETUP');
   }
 
-  // cron.schedule('42 */3 * * *', async () => {
-  //   await hashtagETL(page);
+  cron.schedule('42 */3 * * *', async () => {
+    await hashtagETL(page);
 
-  //   // await eldolar();
-  // });
+    // await eldolar();
+  });
 
   // cron.schedule('17 */2 * * *', async () => {
   //   await extendFollowers(page);
